@@ -1,10 +1,17 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
-typedef void (*SchedTask)(void);
+typedef void (*TaskFn)(void*);
+
+typedef struct {
+    int n;
+    int N;
+    int enable;
+    TaskFn f;
+    void* params;
+} Heartbeat;
 
 void scheduler_init(void);
-int  scheduler_add(SchedTask fn, int N);
-void scheduler_tick(void);
+void scheduler_run(void);
 
 #endif

@@ -1,44 +1,41 @@
 #include "scheduler.h"
 
-typedef struct {
-    int n;          // contatore
-    int N;          // periodo
-    SchedTask fn;   // funzione da eseguire
-} SchedSlot;
+#define MAX_TASKS 8
 
-#define SCHED_MAX 8
-
-static SchedSlot slots[SCHED_MAX];
+static Heartbeat tasks[MAX_TASKS];
+static int task_count = 0;
 
 void scheduler_init(void){
-    for(int i = 0; i < SCHED_MAX; i++){
-        slots[i].fn = 0;
-        slots[i].n = 0;
-        slots[i].N = 0;
+    for(int i = 0; i < MAX_TASKS; i++){
+        tasks[i].n = 0;
+        tasks[i].N = 0;
+        tasks[i].enable = 0;
+        tasks[i].f = 0;
+        tasks[i].params = 0;
     }
+    task_count = 0;
 }
 
-int scheduler_add(SchedTask fn, int N){
-    for(int i = 0; i < SCHED_MAX; i++){
-        if(slots[i].fn == 0){
-            slots[i].fn = fn;
-            slots[i].N = N;
-            slots[i].n = 0;
-            return i;
-        }
-    }
-    return -1;
+int scheduler_add(TaskFn f, int N, void* params){
+    if(task_count >= MAX_TASKS)
+        return -1;
+
+    tasks[task_count].n = 0;
+    tasks[task_count].N = N;
+    tasks[task_count].enable = 1;
+    tasks[task_count].f = f;
+    tasks[task_count].params = params;
+
+    return task_count++;
 }
 
-void scheduler_tick(void){
-    for(int i = 0; i < SCHED_MAX; i++){
-        if(slots[i].fn){
-            slots[i].n++;
+void scheduler_run(void){
+    for(int i = 0; i < task_count; i++){
+        tasks[i].n++;
 
-            if(slots[i].n >= slots[i].N){
-                slots[i].fn();
-                slots[i].n = 0;
-            }
+        if(tasks[i].enable && tasks[i].n >= tasks[i].N){
+            tasks[i].f(tasks[i].params);
+            tasks[i].n = 0;
         }
     }
 }
