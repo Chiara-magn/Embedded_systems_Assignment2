@@ -1,0 +1,26 @@
+# --- Build directories ---
+_build/
+out/
+cmake/
+
+# --- IDE / editor ---
+.vscode/
+
+# --- Compilati e temporanei ---
+*.o
+*.elf
+*.hex
+*.map
+*.d
+*.log
+*.json
+
+# --- File di backup ---
+*~
+*.tmp
+
+# --- CMake cache ---
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
