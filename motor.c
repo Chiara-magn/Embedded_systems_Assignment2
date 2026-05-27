@@ -10,8 +10,6 @@
 
 // Inizializzazione generale del modulo motori
 void motor_init(void) {
-    // Qui non serve nulla se PWM gia' inizializzato in pwm_init()
-    // Manteniamo la funzione per coerenza architetturale
    motor_stop();   // <-- forza stato fermo all'avvio
 }
 
