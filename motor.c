@@ -38,7 +38,7 @@ void motor_forward_clockwise(int duty_left, int duty_right) {
     setPWM_A(0);
     setPWM_B(duty_left);
 
-    // Lato destro pi� lento
+    // Lato destro piu lento
     setPWM_C(0);
     setPWM_D(duty_right);
 }
@@ -48,7 +48,7 @@ void motor_forward_clockwise(int duty_left, int duty_right) {
 // yaw    [-100..100]
 void motor_speed_yaw(int speed, int yaw) {
 
-    // Calcolo velocit� differenziale
+    // Calcolo velocita differenziale
     int L = speed + yaw;
     int R = speed - yaw;
 
