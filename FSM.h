@@ -13,6 +13,4 @@ int get_left_pwm();
 int get_right_pwm();
 State get_current_state(void);
 
-// int obstacle_procedure(); // procedura da eseguire con obstacle avoidance
-
 #endif
