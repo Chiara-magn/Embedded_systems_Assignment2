@@ -5,8 +5,6 @@
 #include "button_handler.h"
 
 static State current_state = HALTED;
-static int left_pwm;
-static int right_pwm;
 
 // OBSTACLE PROCEDURE 
 int obstacle_procedure(int obstacle_cm); // procedura da eseguire con obstacle avoidance
@@ -29,8 +27,7 @@ static int current_light_state; // current state
 // current_light_state = 1 --> MOVING
 // current_light_state = 2 --> OBSTACLE AVOIDANCE
 
-
-void fsm_update_state(int speed, int yawrate, int obstacle_cm){
+void fsm_update_state(int obstacle_cm){
     switch(current_state) {
         case HALTED:
             motor_stop();
@@ -40,8 +37,6 @@ void fsm_update_state(int speed, int yawrate, int obstacle_cm){
         case MOVING:
             current_light_state = 1;
             if(button_t2_pressed()){current_state = HALTED;}
-            left_pwm =  speed - yawrate;
-            right_pwm = speed + yawrate;
             if (obstacle_cm < OBSTACLE_DETECTED_THRESHOLD)
                 current_state = OBSTACLE_AVOIDANCE;
             break;
@@ -63,16 +58,6 @@ void fsm_update_state(int speed, int yawrate, int obstacle_cm){
         default:
             break;
     }
-}
-
-
-// get functions to avoid global variables
-int get_left_pwm(){
-    return left_pwm;
-}
-
-int get_right_pwm(){
-    return right_pwm;
 }
 
 State get_current_state(void) {
