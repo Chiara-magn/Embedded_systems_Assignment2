@@ -11,6 +11,8 @@ void fsm_update_state(int speed, int yawrate, int obstacle_cm);
 
 int get_left_pwm();
 int get_right_pwm();
+int get_light_state();
+
 State get_current_state(void);
 
 #endif

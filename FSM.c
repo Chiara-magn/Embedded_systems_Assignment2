@@ -8,6 +8,7 @@ static State current_state = HALTED;
 static int left_pwm;
 static int right_pwm;
 
+// OBSTACLE PROCEDURE 
 int obstacle_procedure(int obstacle_cm); // procedura da eseguire con obstacle avoidance
 
 typedef enum {
@@ -22,22 +23,30 @@ static int count_obst = 0;
 static int count_3 = 0;
 static int result_oa = 2;  // moving
 
+// LIGHTS
+static int current_light_state; // current state 
+// current_light_state = 0 --> HALTED
+// current_light_state = 1 --> MOVING
+// current_light_state = 2 --> OBSTACLE AVOIDANCE
+
+
 void fsm_update_state(int speed, int yawrate, int obstacle_cm){
     switch(current_state) {
         case HALTED:
             motor_stop();
+            current_light_state = 0;
             if(button_t2_pressed()){current_state = MOVING;}
-            // mancano luci
             break;
         case MOVING:
+            current_light_state = 1;
             if(button_t2_pressed()){current_state = HALTED;}
             left_pwm =  speed - yawrate;
             right_pwm = speed + yawrate;
-            // mancano luci
             if (obstacle_cm < OBSTACLE_DETECTED_THRESHOLD)
                 current_state = OBSTACLE_AVOIDANCE;
             break;
         case OBSTACLE_AVOIDANCE:
+            current_light_state = 2;
             result_oa = obstacle_procedure(obstacle_cm);
             if(!result_oa){ // se 0
                 current_state = HALTED;
@@ -68,6 +77,10 @@ int get_right_pwm(){
 
 State get_current_state(void) {
     return current_state;
+}
+
+int get_light_state(void) {
+    return current_light_state;
 }
 
 int obstacle_procedure(int obstacle_cm)
