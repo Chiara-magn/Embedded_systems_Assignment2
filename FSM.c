@@ -129,6 +129,7 @@ int obstacle_procedure(int obstacle_cm)
         }
         break;
     default:
+    return 1; // da verificare 
         break;
     }
 }

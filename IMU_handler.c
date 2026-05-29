@@ -67,7 +67,7 @@ void imu_init(void) {
         uart_send_string("Incorrect magnetometer Chip ID\r\n");
         return;
     } 
-
+    
     // if we reach this point, all IDs are correct
     uart_send_string("All Chip IDs are CORRECT!\r\n");
 
