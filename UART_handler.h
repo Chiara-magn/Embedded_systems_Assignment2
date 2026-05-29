@@ -16,8 +16,9 @@ int uart_available(void);
 char uart_read_char(void);
 
 bool uart_command_buffer(void);
-bool uart_validate_command(void);
-int uart_get_hz(void);
+
+int uart_get_speed(void);   
+int uart_get_yawrate(void); 
 
 // Circular buffer to get user commands
 #define RX_BUFFER_SIZE 32 // emptied by command buffer max ~10 char/ciclo for 9600 baud

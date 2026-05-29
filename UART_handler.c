@@ -26,21 +26,20 @@ static circular_buffer_t tx_buf = {
 // command buffer for parsing
 static char command_buffer[UART_COMMAND_BUFFER_SZ]; //stores incoming command
 static uint8_t i = 0;       // Index into command_buffer
-static int current_hz = 10; // Current $ACC send frequency (default 10 Hz)
-static int current_bw = 15; // Current accelerometer bandwidth (default 15 = 1000 Hz)
+/* static int current_hz = 10; // Current $ACC send frequency (default 10 Hz)
+static int current_bw = 15; // Current accelerometer bandwidth (default 15 = 1000 Hz) */
+static int current_speed = 0; // Current speed
+static int current_yawrate = 0; // current yaw
 
 /* Parser states for incoming UART commands
 Splits $BW and $HZ cases to avoid accepting invalid values
  */
-typedef enum {
-    STATE_WAIT_START,  // Waiting for '$'
-    STATE_CMD_TYPE,    // Waiting for 'B' or 'H'
-    STATE_B,           // Received 'B', waiting for 'W'
-    STATE_H,           // Received 'H', waiting for 'Z'
-    STATE_COMMA,       // Waiting for ','
-    STATE_DATA1,       // Waiting for first digit
-    STATE_DATA2,       // Waiting for second digit
-    STATE_END          // Waiting for '*'
+typedef enum { 
+    STATE_WAIT_START,   // Waiting for '$'
+    STATE_MSG,          //  PCREF check
+    STATE_COMMA1,       // Waiting for first ','
+    STATE_COMMA2,       // Waiting for speed and second ','
+    STATE_END           // Waiting for yaw and '*'
 } parser_state_t;
 static parser_state_t state = STATE_WAIT_START;
 
@@ -176,111 +175,94 @@ void uart_send_char(char c) {
   return true if a complete valid-format command was received, false otherwise
  */
 
-bool uart_command_buffer(void){  
+bool uart_command_buffer(void) {
     bool string_ready = false;
 
-    while(uart_available()){  // While there are characters in the RX buffer
+    while (uart_available()) {
         char c = uart_read_char();
 
-        switch (state){
+        switch (state) {
 
             case STATE_WAIT_START:
-                if (c == '$'){ // Command always starts with '$'
-                    state = STATE_CMD_TYPE;
+                if (c == '$') {
+                    state = STATE_MSG;
                     i = 0;
-                }    
-            break;
-            
-            case STATE_CMD_TYPE:
-                if (c == 'B'){
-                    state = STATE_B;
-                    command_buffer[i] = c;
+                }
+                break;
+
+            case STATE_MSG:
+                if (c == "PCREF"[i]) {
                     i++;
-                } 
-                else if (c == 'H'){
-                    state = STATE_H;
-                    command_buffer[i] = c;
-                    i++;
-                } 
-                else {
+                    if (i == 5) {
+                        i = 0;
+                        state = STATE_COMMA1;
+                    }
+                } else {
+                    i = 0;
                     state = STATE_WAIT_START;
                 }
-            break;
+                break;
 
-            case STATE_B:
-                if (c == 'W') {
+            case STATE_COMMA1:
+                if (c == ',') {
+                    command_buffer[i] = '\0';
+                    int val = atoi(command_buffer);
+                    if (val < -100 || val > 100) {
+                        uart_send_string("$ERR,1*");
+                        i = 0;
+                        state = STATE_WAIT_START;
+                    } else {
+                        current_speed = val;
+                        i = 0;
+                        state = STATE_COMMA2;
+                    }
+                } else if (c == '-' || (c >= '0' && c <= '9')) {
                     command_buffer[i] = c;
                     i++;
-                    state = STATE_COMMA;
-                } 
-                else {
+                } else {
+                    i = 0;
                     state = STATE_WAIT_START;
                 }
-            break;
+                break;
 
-            case STATE_H:
-                if (c == 'Z') {
+            case STATE_COMMA2:
+                if (c == '*') {
+                    command_buffer[i] = '\0';
+                    int val = atoi(command_buffer);
+                    if (val < -100 || val > 100) {
+                        uart_send_string("$ERR,2*");
+                        i = 0;
+                        state = STATE_WAIT_START;
+                    } else {
+                        current_yawrate = val;
+                        i = 0;
+                        string_ready = true;
+                        state = STATE_WAIT_START;
+                    }
+                } else if (c == '-' || (c >= '0' && c <= '9')) {
                     command_buffer[i] = c;
                     i++;
-                    state = STATE_COMMA;
-                } 
-                else {
+                } else {
+                    i = 0;
                     state = STATE_WAIT_START;
                 }
-            break;
-
-            case STATE_COMMA: 
-                if (c == ',') { // Separator between command and data
-                    state = STATE_DATA1;
-                } 
-                else {
-                    state = STATE_WAIT_START;
-                }
-            break;
-
-            case STATE_DATA1: 
-                if (c >= '0' && c <= '9') { //first digit
-                    command_buffer[i] = c;
-                    i++;
-                    state = STATE_DATA2;
-                } 
-                else {
-                    state = STATE_WAIT_START;
-                }
-            break;
-
-            case STATE_DATA2:
-                if (c >= '0' && c <= '9') { //second digit
-                    command_buffer[i] = c;
-                    i++;
-                    state = STATE_END;
-                } 
-                else {
-                    state = STATE_WAIT_START;
-                }
-            break;
-
-            case STATE_END:
-                if (c == '*') { // '*' marks end of command
-                    i++;
-                    command_buffer[i] = '\0'; // Null-terminate the string for easier processing
-                    string_ready = true;
-                }
-                state = STATE_WAIT_START; // Reset for next command
-            break;
+                break;
         }
 
-        // Safety: reset if buffer is about to overflow
         if (i >= UART_COMMAND_BUFFER_SZ - 1) {
             i = 0;
             state = STATE_WAIT_START;
         }
 
-        if (string_ready) break; // Stop reading — process command first
+        if (string_ready) break;
     }
 
     return string_ready;
 }
+
+int uart_get_speed(void)   { return current_speed; }
+int uart_get_yawrate(void) { return current_yawrate; }
+
 
 /*
   Validate and apply a parsed command from command_buffer
@@ -288,7 +270,7 @@ bool uart_command_buffer(void){
   Validates $BW,xx* (8 ≤ xx ≤ 15) and $HZ,yy* (yy ∈ {0,1,2,5,10})
  */
 
-bool uart_validate_command(void) { 
+/* bool uart_validate_command(void) { 
 
     // Convert ASCII digits to integer value
     // e.g. '1','5' → (1*10)+5 = 15
@@ -315,13 +297,13 @@ bool uart_validate_command(void) {
     }
     return true;
 }
-
+ */
 /*
   Get the current $ACC send frequency
   return Current frequency in Hz (0 means disabled)
   It will be used in main loop to determine how often to send $ACC messages based on user command
  */
-int uart_get_hz(void) {
+/* int uart_get_hz(void) {
     return current_hz;
 }
-
+ */
