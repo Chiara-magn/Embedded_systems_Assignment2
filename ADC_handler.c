@@ -12,8 +12,8 @@ void ADC_init(){
     AD1CON3bits.ADCS = 8; //Tad how long is an instant(8Tcy for 10bit adc)
     AD1CON1bits.ASAM = 1; // automatic starting
     AD1CON3bits.SAMC = 16; //sample time 16 Tad
-    AD1CON1bits.SSRC = 2;  // Timer1 triggera la fine del campionamento (
-    /* AD1CON1bits.SSRC = 7; //automatic ending */
+    // AD1CON1bits.SSRC = 2;  // Timer1 triggera la fine del campionamento (
+    AD1CON1bits.SSRC = 7; //automatic ending 
     
     AD1CON1bits.SIMSAM = 0; // Enable Sequential Sampling
     AD1CON2bits.ALTS = 0; // NO!Enable Alternate Input Selection
@@ -29,8 +29,6 @@ void ADC_init(){
     AD1CSSLbits.CSS11  = 1;  // AN11 (batteria)
 
     AD1CON2bits.SMPI = 1;  // interrupt dopo aver scansionato 2 canali (2-1=1)
-
-    //in futuro configura interrupts
     
     AD1CON1bits.ADON = 1; //turn on 
 
