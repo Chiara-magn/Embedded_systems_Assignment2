@@ -4,10 +4,10 @@
 
 void IR_init(void){
     // IR sensor
-    TRISBbits.TRISB5 = 1;
-    ANSELBbits.ANSB5 = 1;
-    TRISBbits.TRISB4 = 0;
-    LATBbits.LATB4   = 1;
+    TRISBbits.TRISB14 = 1; // analog
+    ANSELBbits.ANSB14 = 1; // analog
+    TRISBbits.TRISB9 = 0; // enable
+    LATBbits.LATB9   = 1; // enable
 }
 
 float IR_ReadDistance_cm(void) {

@@ -45,6 +45,7 @@ void setup() {
 
 int main() {
     setup();
+    tmr_setup_period(TIMER1, 2);
 
     while (1) {
         scheduler_run();
