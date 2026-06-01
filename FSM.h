@@ -8,6 +8,7 @@ typedef enum {
 } State;
 
 void fsm_update_state( int obstacle_cm);
+int get_light_state(void);
 State get_current_state(void);
 
 #endif

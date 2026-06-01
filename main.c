@@ -17,10 +17,11 @@
 #include "IMU_handler.h"
 #include "battery_handler.h"
 #include "scheduler.h"
+#include "button_handler.h"
+#include "SPI_handler.h"
+#include "ADC_handler.h"
 
-
-void setup(){
-
+void setup() {
     timer_init();
     led_init();
     uart_init();
@@ -34,25 +35,21 @@ void setup(){
     battery_init();
     buttons_init();
     ADC_init();
-    scheduler_init();
 
+    // Inizializza e registra i task
+    scheduler_init();
+    scheduler_add(task1, 1,   NULL); // 500 Hz → N=1
+    scheduler_add(task2, 50,  NULL); // 10 Hz  → N=50
+    scheduler_add(task3, 500, NULL); // 1 Hz   → N=500
 }
 
-int main(){
+int main() {
+    setup();
 
-    // Add your code here and press Ctrl + Shift + B to build
-
-    
-    /*     scheduler_init();
-
-    scheduler_add(task_update_feedback, 1, &controlData);
-    scheduler_add(task_update_control, 5, &controlData);
-    scheduler_add(task_update_motors, 2, &controlData);
-
-    while(1){
+    while (1) {
         scheduler_run();
         tmr_wait_period(TIMER1);
-    } */
+    }
 
     return 0;
 }
