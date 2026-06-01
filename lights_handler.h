@@ -10,4 +10,8 @@ void right_lights_toggle(void);
 void low_intensity_toggle(void);
 void headlights_toggle(void);
 
+void low_intensity_set(int state); 
+void left_lights_set(int state); 
+void right_lights_set(int state);
+
 #endif

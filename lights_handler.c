@@ -31,3 +31,16 @@ void low_intensity_toggle(void){
 void headlights_toggle(void){
     BEAM_LAT = !BEAM_LAT;
 }
+
+// if state = 0 lights turned off else state = 1 lights on
+void low_intensity_set(int state) {
+    LOW_LIGHTS_LAT = state;    
+}
+
+void left_lights_set(int state) {
+    L_LIGHTS_LAT = state;    
+}
+
+void right_lights_set(int state){
+    R_LIGHTS_LAT = state; 
+}

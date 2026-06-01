@@ -1,6 +1,7 @@
 #include "scheduler.h"
+#include "tasks.h"
 
-#define MAX_TASKS 8
+#define MAX_TASKS 3 // abbiamo solo 3 task
 
 static Heartbeat tasks[MAX_TASKS];
 static int task_count = 0;

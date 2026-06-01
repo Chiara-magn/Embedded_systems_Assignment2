@@ -156,7 +156,7 @@ uint8_t imu_read_chip_id(imu_device_t dev)
  */
 
 
-int16_t imu_read_mag_x(void)
+/* int16_t imu_read_mag_x(void)
 {
     uint8_t lsb = imu_read_register(IMU_MAG, 0x42);
     uint8_t msb = imu_read_register(IMU_MAG, 0x43);
@@ -165,6 +165,32 @@ int16_t imu_read_mag_x(void)
     int16_t raw = ((int16_t)msb << 8) | lsb; // Combine MSB and LSB
     return raw >> 3;  // Shift right 3 to get 13 useful bits
 }
+ */
+
+// read all data from magentometer
+void imu_read_mag(sensor_data_t *data)
+{
+    uint8_t lsb, msb;
+
+    // X axis - 13 bit
+    lsb = imu_read_register(IMU_MAG, 0x42);
+    msb = imu_read_register(IMU_MAG, 0x43);
+    lsb &= 0xF8;  // Mask lower 3 bits
+    data->x = ((int16_t)msb << 8 | lsb) >> 3;
+
+    // Y axis - 13 bit
+    lsb = imu_read_register(IMU_MAG, 0x44);
+    msb = imu_read_register(IMU_MAG, 0x45);
+    lsb &= 0xF8;  // Mask lower 3 bits
+    data->y = ((int16_t)msb << 8 | lsb) >> 3;
+
+    // Z axis - 15 bit (maschera e shift diversi!)
+    lsb = imu_read_register(IMU_MAG, 0x46);
+    msb = imu_read_register(IMU_MAG, 0x47);
+    lsb &= 0xFE;  // Mask lower 1 bit
+    data->z = ((int16_t)msb << 8 | lsb) >> 1;
+}
+
 
 /*
   Read all three accelerometer axes via SPI
@@ -179,7 +205,7 @@ int16_t imu_read_mag_x(void)
   To get filtered values you have to set 0x00 the 0x13 register (default mode)
  */
 
-void imu_read_acc(accel_data_t *data)
+void imu_read_acc(sensor_data_t *data)
 {
     uint8_t lsb, msb;
 
@@ -224,7 +250,7 @@ void imu_set_bandwidth(uint8_t bandwidth_value)
    angles -> Pointer to struct where angles will be stored
  */
 
-void imu_roll_pitch(const accel_data_t *acc, angle_data_t *angles)
+/* void imu_roll_pitch(constsensor_data_t *acc, angle_data_t *angles)
 {
     float ax = (float)acc->x;
     float ay = (float)acc->y;
@@ -236,5 +262,43 @@ void imu_roll_pitch(const accel_data_t *acc, angle_data_t *angles)
     // Uses sqrt of ay2+az2 as denominator for stability near90
     angles->pitch = atan2f(-ax, sqrtf(ay*ay + az*az)) * RAD_TO_DEG;
 }
+ */
 
+void imu_roll_pitch_yaw(const sensor_data_t *acc, const sensor_data_t *mag, angle_data_t *angles)
+{
+    float ax = (float)acc->x;
+    float ay = (float)acc->y;
+    float az = (float)acc->z;
 
+    // Roll: rotation around X axis
+    angles->roll  = atan2f(ay, az) * RAD_TO_DEG;
+
+    // Pitch: rotation around Y axis
+    // Uses sqrt of ay²+az² as denominator for stability near ±90°
+    angles->pitch = atan2f(-ax, sqrtf(ay*ay + az*az)) * RAD_TO_DEG;
+
+    // Yaw: rotation around Z axis (requires magnetometer)
+    float mx = (float)mag->x;
+    float my = (float)mag->y;
+    float mz = (float)mag->z;
+
+    // Convert roll and pitch to radians for tilt compensation
+    float roll_rad  = angles->roll  * DEG_TO_RAD;
+    float pitch_rad = angles->pitch * DEG_TO_RAD;
+
+    // Tilt-compensated magnetic field components
+    float cos_roll  = cosf(roll_rad);
+    float sin_roll  = sinf(roll_rad);
+    float cos_pitch = cosf(pitch_rad);
+    float sin_pitch = sinf(pitch_rad);
+
+    float mag_x = mx * cos_pitch
+                + my * sin_roll * sin_pitch
+                + mz * cos_roll * sin_pitch;
+
+    float mag_y = my * cos_roll
+                - mz * sin_roll;
+
+    // Yaw from tilt-compensated magnetic north
+    angles->yaw = atan2f(-mag_y, mag_x) * RAD_TO_DEG;
+}
