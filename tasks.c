@@ -26,14 +26,12 @@ int current_light = 0;
 
 void task1(void* param)// 500 Hz 
 {
-     // led_toggle_ld2(); // test se task1 funziona
     obstacle_cm = IR_ReadDistance_cm(); // IR sensor read 
 
-/*     if(uart_command_buffer()){ 
+    if(uart_command_buffer()){ 
         current_speed = uart_get_speed();   
         current_yaw = uart_get_yawrate(); 
-    } */
-
+    } 
     fsm_update_state(obstacle_cm);
     if(get_current_state() == MOVING){
         if(current_speed == 0 && current_yaw == 0)

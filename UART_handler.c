@@ -191,12 +191,13 @@ bool uart_command_buffer(void) {
                 break;
 
             case STATE_MSG:
+            
                 if (c == "PCREF"[i]) {
                     i++;
-                    if (i == 5) {
-                        i = 0;
-                        state = STATE_COMMA1;
-                    }
+                } else if (i == 5 && c == ',') {
+                    // ha letto tutti e 5 i caratteri e ora arriva la virgola
+                    i = 0;
+                    state = STATE_COMMA1;
                 } else {
                     i = 0;
                     state = STATE_WAIT_START;
