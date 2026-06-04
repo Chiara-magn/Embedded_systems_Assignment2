@@ -26,6 +26,7 @@ int current_light = 0;
 
 void task1(void* param)// 500 Hz 
 {
+     // led_toggle_ld2(); // test se task1 funziona
     obstacle_cm = IR_ReadDistance_cm(); // IR sensor read 
 
     if(uart_command_buffer()){ 
@@ -42,6 +43,7 @@ void task1(void* param)// 500 Hz
 
 void task2(void* param) // 10 Hz
 {
+    led_toggle_ld2(); // test se task2 funziona
     // lettura magnetometro 
     imu_read_mag(&mag);
     // lettura accelerometro

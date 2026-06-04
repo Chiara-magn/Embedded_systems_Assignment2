@@ -82,6 +82,14 @@
 // Three equal 100K resistors (R49, R51, R54): Vbat = 3 * Vadc  (slide 26)
 #define BATTERY_DIVIDER_RATIO   3.0f
 
+// IR 
+#define IR_AN_TRIS   TRISBbits.TRISB14
+#define IR_AN_ANSEL  ANSELBbits.ANSB14
+#define IR_AN_RPIN   46   // RB14 -> RPI46 (dsPIC33EP512MU810)
+
+#define IR_EN_TRIS   TRISBbits.TRISB9
+#define IR_EN_LAT    LATBbits.LATB9
+#define IR_EN_RPIN   41   // RB9 -> RPI41 
 
 #endif
 

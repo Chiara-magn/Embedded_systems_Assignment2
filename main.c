@@ -22,8 +22,9 @@
 #include "ADC_handler.h"
 
 void setup() {
-    timer_init();
+    ANSELA = ANSELB = ANSELC = ANSELD = ANSELE = ANSELG = 0x0000; 
     led_init();
+    timer_init();
     uart_init();
     spi_init_pins();
     imu_setup();
@@ -44,13 +45,39 @@ void setup() {
 }
 
 int main() {
-    setup();
-    tmr_setup_period(TIMER1, 2);
+
+     setup();
+/*     led_init();
+    timer_init();
+    scheduler_init();
+    uart_init();
+    spi_init_pins();
+    imu_setup();
+    imu_init();
+    IR_init();
+    lights_init();
+    pwm_init();
+    motor_init();
+    battery_init();
+    buttons_init(); */
+
+  /*   scheduler_add(task1, 1,   NULL); // 500 Hz → N=1
+    scheduler_add(task2, 50,  NULL); // 10 Hz  → N=50
+    scheduler_add(task3, 500, NULL); // 1 Hz   → N=500 */
+
+    //led_toggle_ld1();
+    //led_toggle_ld2();
+    //right_lights_toggle();
+    //left_lights_toggle();
+    //low_intensity_toggle();
+    tmr_setup_period (TIMER1, 2);
 
     while (1) {
+    //    led_toggle_ld2();
         scheduler_run();
         tmr_wait_period(TIMER1);
     }
 
     return 0;
-}
+} 
+

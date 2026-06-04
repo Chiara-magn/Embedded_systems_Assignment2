@@ -22,7 +22,7 @@ static int count_3 = 0;
 static int result_oa = 2;  // moving
 
 // LIGHTS
-static int current_light_state; // current state 
+static int current_light_state = 0; // current state HALTED
 // current_light_state = 0 --> HALTED
 // current_light_state = 1 --> MOVING
 // current_light_state = 2 --> OBSTACLE AVOIDANCE

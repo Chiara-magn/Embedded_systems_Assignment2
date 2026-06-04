@@ -7,33 +7,39 @@ volatile uint16_t raw_bat = 0;
 void ADC_init(){
 
      //configuration ADC----------------------
-    
-    AD1CON1bits.AD12B = 0; // Select 10-bit mode
+    AD1CON1bits.ADON = 0;   // turn off
     AD1CON3bits.ADCS = 8; //Tad how long is an instant(8Tcy for 10bit adc)
+    
     AD1CON1bits.ASAM = 1; // automatic starting
     AD1CON3bits.SAMC = 16; //sample time 16 Tad
     // AD1CON1bits.SSRC = 2;  // Timer1 triggera la fine del campionamento (
     AD1CON1bits.SSRC = 7; //automatic ending 
+    AD1CON1bits.AD12B = 0; // Select 10-bit mode
     
     AD1CON1bits.SIMSAM = 0; // Enable Sequential Sampling
-    AD1CON2bits.ALTS = 0; // NO!Enable Alternate Input Selection
+    AD1CON2bits.SMPI = 1;  // interrupt dopo aver scansionato 2 canali (2-1=1)
     AD1CON2bits.CSCNA = 1; // scan mode
-    AD1CON2bits.CHPS = 0; // channel 0
-    AD1CHS0bits.CH0NA = 0;  // negative = GND
-    // L'ADC misura una tensione differenziale tra due ingressi:
-    // Positivo(CH0SA) mio segnale (non serve se ho scan)
-    // Negativo(CH0NA) terra
-    
-    // Quali canali scansionare: (sono in fila sullo stesso canale)
-    AD1CSSLbits.CSS5   = 1;  // AN5  (sensore IR)
+
+    // Set analog
+    // IR
+    ANSELBbits.ANSB14 = 1;
+    TRISBbits.TRISB14 = 1;
+    // Battery
+    ANSELBbits.ANSB11 = 1;
+    TRISBbits.TRISB11 = 1;
+
+    AD1CSSL = 0;
+
+    AD1CSSLbits.CSS14   = 1;  // AN14 (sensore IR)
     AD1CSSLbits.CSS11  = 1;  // AN11 (batteria)
 
-    AD1CON2bits.SMPI = 1;  // interrupt dopo aver scansionato 2 canali (2-1=1)
-    
-    AD1CON1bits.ADON = 1; //turn on 
+    AD1CON2bits.ALTS = 0; // NO!Enable Alternate Input Selection
 
     IFS0bits.AD1IF = 0;   // pulisci flag
     IEC0bits.AD1IE = 1;   // abilita interrupt ADC
+
+    AD1CON1bits.ADON = 1; //turn on 
+    AD1CON1bits.SAMP = 1; 
 }
 
 // interrupt ADC. Non c'è bisogno di while (!AD1CON1bits.DONE); 
