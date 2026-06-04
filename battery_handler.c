@@ -9,6 +9,14 @@ void battery_init(void){
     ANSELBbits.ANSB11 = 1;
 }
 
-float Battery_ReadVoltage(void) {
-    return raw_to_voltage(raw_bat) * BATTERY_DIVIDER_RATIO;
+double Battery_ReadVoltage(){
+    AD1CON1bits.SAMP = 0;   // Stop sampling and start conversion
+    while (!AD1CON1bits.DONE);  // // Wait until conversion is complete
+    unsigned int adc_val = ADC1BUF0; // Read raw ADC value
+    AD1CON1bits.SAMP = 1;
+    
+    // Convert ADC value to battery voltage (in volts)
+    double battery_voltage =raw_to_voltage(adc_val) * 3.0;
+    
+    return battery_voltage;
 }

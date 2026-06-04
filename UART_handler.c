@@ -263,6 +263,13 @@ bool uart_command_buffer(void) {
 int uart_get_speed(void)   { return current_speed; }
 int uart_get_yawrate(void) { return current_yawrate; }
 
+int uart_get_rx_count(void) {
+    return (rx_buf.head - rx_buf.tail + rx_buf.size) % rx_buf.size;
+}
+
+int uart_get_tx_count(void) {
+    return (tx_buf.head - tx_buf.tail + tx_buf.size) % tx_buf.size;
+}
 
 /*
   Validate and apply a parsed command from command_buffer
@@ -307,3 +314,5 @@ int uart_get_yawrate(void) { return current_yawrate; }
     return current_hz;
 }
  */
+
+

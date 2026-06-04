@@ -11,5 +11,7 @@ extern volatile uint16_t raw_bat;
 void ADC_init(void);
 float raw_to_voltage(uint16_t raw);
 float voltage_to_dist(float voltage);
+double read_battery();
+int read_IR();
 
 #endif

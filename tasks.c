@@ -47,7 +47,6 @@ void task1(void* param)// 500 Hz
 
 void task2(void* param) // 10 Hz
 {
-    led_toggle_ld2(); // test se task2 funziona
     // lettura magnetometro 
     imu_read_mag(&mag);
     // lettura accelerometro
@@ -56,22 +55,28 @@ void task2(void* param) // 10 Hz
     imu_roll_pitch_yaw(&accel, &mag, &angles);
     //messaggio valori
     char distance[20]; // controllare grandezza
-    sprintf(distance, "$MDIST,%d*", obstacle_cm);
+    sprintf(distance, "$MDIST,%d*\r\n", obstacle_cm);
     uart_send_string(distance);
     // invio $MANGLE,<roll>,<pitch>,<yaw>*
     char msg[50]; // controllare grandezza
-    sprintf(msg, "$MANGLE,%.2f,%.2f,%.2f*", (double)angles.roll, (double)angles.pitch, (double)angles.yaw);
+    sprintf(msg, "$MANGLE,%.2f,%.2f,%.2f*\r\n", (double)angles.roll, (double)angles.pitch, (double)angles.yaw);
     uart_send_string(msg);
+    // Button t3 
+    if(button_t3_pressed()) {
+    char msg[30];
+    sprintf(msg, "$MBUF,%d,%d*\r\n", uart_get_tx_count(), uart_get_rx_count());
+    uart_send_string(msg);
+}
 }
 
 void task3(void* param) // 1 Hz
 {
-    // blink led A0
+    // blink led A0 
     led_toggle_ld1();
     // $MBATT,v_batt*
     battery_volt = Battery_ReadVoltage();
     char msg[20]; // controllare grandezza
-    sprintf(msg, "$MBATT,%.2f*", battery_volt);
+    sprintf(msg, "$MBATT,%.2f*\r\n", battery_volt);
     uart_send_string(msg);
     current_light =  get_light_state();
     switch (current_light)
