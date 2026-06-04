@@ -10,12 +10,14 @@ void buttons_init(void){
 	// INT1 button 3
     BTN_T3_TRIS = 1;                 // input
     RPINR0bits.INT1R = BTN_T3_RPIN;  // remapping
+    IEC1bits.INT1IE = 0; 
     IFS1bits.INT1IF = 0;             // clear flag
     IEC1bits.INT1IE = 1;             // abilita interrupt
 
 	// INT2 button 2
     BTN_T2_TRIS = 1;                 // input
     RPINR1bits.INT2R = BTN_T2_RPIN;  // remapping
+    IEC1bits.INT2IE = 0; 
     IFS1bits.INT2IF = 0;             // clear flag
     IEC1bits.INT2IE = 1;             // abilita interrupt
 	

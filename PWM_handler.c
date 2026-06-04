@@ -6,14 +6,14 @@
 
 #define FCY     72000000UL      // 72 MHz
 #define FPWM    10000           // 10 kHz
-#define OCxRS ((FCY / FPWM) - 1)   
+#define PWM_PERIOD ((FCY / FPWM) - 1)   
 //period, timer resets when OCxTMR == OCxRS 
 
 // Funzione interna: converte duty in OCxR
 static inline uint16_t duty_to_OCxR(int duty) {
     if(duty < 0) duty = 0;
     if(duty > 100) duty = 100;
-    return (uint16_t)((duty * OCxRS) / 100);
+    return (uint16_t)((duty * PWM_PERIOD) / 100);
 }
 //OCxR = definisce il duty cycle (il pin va LOW quando OCxTMR == OCxR)
 // il range utile va da 40 a 100%
@@ -37,8 +37,8 @@ void pwm_init(void) {
     OC1CON1bits.OCM = 0b110;    // PWM edge-aligned
     OC1CON2bits.SYNCSEL = 0x1F; // No sync source
 
-    OC1R  = 0;
-    OC1RS = OCxRS;
+    OC1RS  = PWM_PERIOD;
+    OC1R = 0;
 
 
     // Configurazione OC2
@@ -46,8 +46,8 @@ void pwm_init(void) {
     OC2CON1bits.OCM = 0b110;
     OC2CON2bits.SYNCSEL = 0x1F;
 
-    OC2R  = 0;
-    OC2RS = OCxRS;
+    OC2RS  = PWM_PERIOD;
+    OC2R = 0;
 
 
     // Configurazione OC3
@@ -55,8 +55,8 @@ void pwm_init(void) {
     OC3CON1bits.OCM = 0b110;
     OC3CON2bits.SYNCSEL = 0x1F;
 
-    OC3R  = 0;
-    OC3RS = OCxRS;
+    OC3RS  = PWM_PERIOD;
+    OC3R = 0;
 
 
     // Configurazione OC4
@@ -64,10 +64,8 @@ void pwm_init(void) {
     OC4CON1bits.OCM = 0b110;
     OC4CON2bits.SYNCSEL = 0x1F;
 
-    OC4R  = 0;
-    OC4RS = OCxRS;
-
-    
+    OC4RS  = PWM_PERIOD;
+    OC4R = 0;
 
 }
 

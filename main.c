@@ -35,7 +35,7 @@ void setup() {
     motor_init();
     battery_init();
     buttons_init();
-    ADC_init();
+    //ADC_init();
 
     // Inizializza e registra i task
     scheduler_init();

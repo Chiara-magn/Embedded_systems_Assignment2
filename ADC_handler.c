@@ -39,20 +39,20 @@ void ADC_init(){
     IEC0bits.AD1IE = 1;   // abilita interrupt ADC
 
     AD1CON1bits.ADON = 1; //turn on 
-    AD1CON1bits.SAMP = 1; 
+    // AD1CON1bits.SAMP = 1; 
 }
 
 // interrupt ADC. Non c'è bisogno di while (!AD1CON1bits.DONE); 
 // Viene chiamato quando il flag del fine conversione diventa 1
 void __attribute__((interrupt, no_auto_psv)) _ADC1Interrupt(void) {
-    raw_ir  = ADC1BUF0;   // AN5  - sensore IR
-    raw_bat = ADC1BUF1;   // AN11 - batteria
+    raw_ir  = ADC1BUF1;   // AN5  - sensore IR
+    raw_bat = ADC1BUF0;   // AN11 - batteria
     IFS0bits.AD1IF = 0;   // pulisci il flag
 }
 
 
 float raw_to_voltage(uint16_t raw){
-    return (float)raw * 3.3f / 1024.0f;
+    return (float)raw * 3.3f / 1023.0f;
 }
 
 float voltage_to_dist(float voltage){
