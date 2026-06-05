@@ -64,7 +64,7 @@ void task2(void* param) // 10 Hz
     char msg[30];
     sprintf(msg, "$MBUF,%d,%d*\r\n", uart_get_tx_count(), uart_get_rx_count());
     uart_send_string(msg);
-}
+    }
 }
 
 void task3(void* param) // 1 Hz

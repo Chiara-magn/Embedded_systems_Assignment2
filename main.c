@@ -47,7 +47,8 @@ void setup() {
 int main() {
     setup();
     tmr_setup_period (TIMER1, 2);
-
+    tmr_setup_period (TIMER3, 2); // adc
+    
     while (1) {
     //    led_toggle_ld2();
         scheduler_run();

@@ -41,6 +41,11 @@ void imu_set_active(imu_device_t dev);
 // functions Assignment1 
 void imu_read_acc(sensor_data_t *data);
 void imu_read_mag(sensor_data_t *data);
+void imu_read_gyro(sensor_data_t *data);
+void imu_update_yaw_gyro(void);
+void imu_reset_yaw_gyro(void);
+float imu_get_yaw_gyro(void);
+
 void imu_set_bandwidth(uint8_t bandwidth_value);
 void imu_roll_pitch_yaw(const sensor_data_t *acc, const sensor_data_t *mag, angle_data_t *angles);
 

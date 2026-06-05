@@ -13,5 +13,7 @@ float raw_to_voltage(uint16_t raw);
 float voltage_to_dist(float voltage);
 double read_battery();
 int read_IR();
+uint16_t get_raw_IR();
+uint16_t get_raw_battery();
 
 #endif

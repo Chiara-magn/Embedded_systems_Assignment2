@@ -4,6 +4,12 @@
 #include "config.h"
 #include "timer.h"
 
+#define IMU_DT 0.002f   // 1 / 500 Hz = 2 ms
+
+static float yaw_deg_gyro = 0.0f;
+static uint32_t last_us = 0;
+
+
 /*
   Configure SPI clock polarity/phase for Bosch BMX055
   Must be called before imu_init ? BMX055 requires clock idle LOW (CKP=0, CKE=1)
@@ -228,6 +234,54 @@ void imu_read_acc(sensor_data_t *data)
     data->z = ((int16_t)msb << 8 | lsb) >> 4;
 }
 
+// read gyroscope
+
+void imu_read_gyro(sensor_data_t *data)
+{
+    uint8_t lsb, msb;
+
+    // X axis
+    lsb = imu_read_register(IMU_GYR, 0x02);
+    msb = imu_read_register(IMU_GYR, 0x03);
+    data->x = (int16_t)((msb << 8) | lsb);
+
+    // Y axis
+    lsb = imu_read_register(IMU_GYR, 0x04);
+    msb = imu_read_register(IMU_GYR, 0x05);
+    data->y = (int16_t)((msb << 8) | lsb);
+
+    // Z axis (yaw rate)
+    lsb = imu_read_register(IMU_GYR, 0x06);
+    msb = imu_read_register(IMU_GYR, 0x07);
+    data->z = (int16_t)((msb << 8) | lsb);
+}
+
+// yaw from gyro to compute the 90 deg rotation (OBSTACLE_AVOIDANCE)
+
+void imu_update_yaw(void)
+{
+    sensor_data_t gyro;
+    imu_read_gyro(&gyro);
+
+    // Conversione LSB → °/s (range ±125°/s)
+    float gyro_z_dps = gyro.z / 262.4f;
+
+    // Integrazione semplice
+    yaw_deg_gyro += gyro_z_dps * IMU_DT;
+}
+
+// getter and reset yaw gyro
+void imu_reset_yaw_gyro(void)
+{
+    yaw_deg_gyro = 0.0f;
+}
+
+float imu_get_yaw_gyro(void)
+{
+    return yaw_deg_gyro;
+}
+
+
 /*
   Set accelerometer low-pass filter bandwidth
   Written to register 0x10 (ACC_BW) pag.58 datasheet, valid values 8?15:
@@ -263,6 +317,7 @@ void imu_set_bandwidth(uint8_t bandwidth_value)
     angles->pitch = atan2f(-ax, sqrtf(ay*ay + az*az)) * RAD_TO_DEG;
 }
  */
+
 
 void imu_roll_pitch_yaw(const sensor_data_t *acc, const sensor_data_t *mag, angle_data_t *angles)
 {

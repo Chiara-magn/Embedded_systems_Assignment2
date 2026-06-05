@@ -20,11 +20,8 @@ void IR_init(void){
 }
  */
 int IR_ReadDistance_cm(){    
-    AD1CON1bits.SAMP = 0;
-    while (!AD1CON1bits.DONE);
-    unsigned int adc_val = ADC1BUF1; // Raw ADC value
-    AD1CON1bits.SAMP = 1;
-    double voltage = raw_to_voltage(adc_val);
+
+    double voltage = raw_to_voltage(get_raw_IR());
     
     double raw_distance = voltage_to_dist(voltage) * 100;
     int distance = (int)(raw_distance);
