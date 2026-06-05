@@ -49,9 +49,10 @@ void task1(void* param)// 500 Hz
             motor_stop();
             break;
     } 
-}  
+}   
 
-void task2(void* param) // 10 Hz
+
+ void task2(void* param) // 10 Hz
 {
     // lettura magnetometro 
     imu_read_mag(&mag);
@@ -73,7 +74,9 @@ void task2(void* param) // 10 Hz
     sprintf(msg, "$MBUF,%d,%d*\r\n", uart_get_tx_count(), uart_get_rx_count());
     uart_send_string(msg);
     }
-}
+} 
+
+
 
 void task3(void* param) // 1 Hz
 {
@@ -84,14 +87,18 @@ void task3(void* param) // 1 Hz
     char msg[30]; // controllare grandezza
     sprintf(msg, "$MBATT,%.2f*\r\n", battery_volt);
     uart_send_string(msg);
+
+    static int blink = 0;
+    blink = !blink;  // alterna 0 e 1 ogni secondo
+
     current_light =  get_light_state();
     switch (current_light)
     {
     case 0:
         // HALTED 
         // blinking lights
-        right_lights_toggle(); 
-        left_lights_toggle();
+        right_lights_set(blink); 
+        left_lights_set(blink);
         // low intensity off
         low_intensity_set(0);
         break;
@@ -106,7 +113,7 @@ void task3(void* param) // 1 Hz
     case 2:
         // OBSTACLE_AVOIDANCE 
         // blink right lights
-        right_lights_toggle(); 
+        right_lights_set(blink); 
         // low intensity on 
         low_intensity_set(1);
         // left lights off
