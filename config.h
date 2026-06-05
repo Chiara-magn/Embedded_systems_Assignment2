@@ -76,7 +76,7 @@
 // --- ADC channel assignments ---
 #define ADC_CH_BATTERY      11      // AN11  → BAT-VSENSE line (slide 26)
 #define ADC_CH_IR           2       // AN2   → IR Distance Sensor on MIKRObus socket 2 (slide 25)
-#define OBSTACLE_DETECTED_THRESHOLD 30 // da modificare 
+#define OBSTACLE_DETECTED_THRESHOLD 15 // da modificare 
 
 // --- Battery voltage divider ---
 // Three equal 100K resistors (R49, R51, R54): Vbat = 3 * Vadc  (slide 26)

@@ -7,8 +7,6 @@
 #define IMU_DT 0.002f   // 1 / 500 Hz = 2 ms
 
 static float yaw_deg_gyro = 0.0f;
-static uint32_t last_us = 0;
-
 
 /*
   Configure SPI clock polarity/phase for Bosch BMX055
@@ -233,6 +231,9 @@ void imu_read_acc(sensor_data_t *data)
     lsb &= 0xF0;
     data->z = ((int16_t)msb << 8 | lsb) >> 4;
 }
+
+
+
 
 // read gyroscope
 

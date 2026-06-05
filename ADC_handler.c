@@ -47,7 +47,7 @@ void ADC_init(){
 
 // interrupt ADC. Non c'è bisogno di while (!AD1CON1bits.DONE); 
 // Viene chiamato quando il flag del fine conversione diventa 1
- void __attribute__((interrupt, no_auto_psv)) _ADC1Interrupt(void) {
+ void __attribute__((interrupt, no_auto_psv)) _AD1Interrupt(void) {
     raw_ir  = ADC1BUF1;   // AN15  - sensore IR
     raw_bat = ADC1BUF0;   // AN11 - batteria
     IFS0bits.AD1IF = 0;   // pulisci il flag
@@ -55,11 +55,11 @@ void ADC_init(){
 
 
 uint16_t get_raw_IR(){
-   uint16_t val = raw_ir;
+    return raw_ir;
 }
 
 uint16_t get_raw_battery(){
-   uint16_t val = raw_bat;
+    return raw_bat;
 }
 
 float raw_to_voltage(uint16_t raw){

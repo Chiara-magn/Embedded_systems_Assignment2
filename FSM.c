@@ -3,6 +3,7 @@
 #include "motor.h"
 #include "IR_handler.h"
 #include "button_handler.h"
+#include "IMU_handler.h"
 
 static State current_state = HALTED;
 
@@ -42,6 +43,7 @@ void fsm_update_state(int obstacle_cm){
             break;
         case OBSTACLE_AVOIDANCE:
             current_light_state = 2;
+            if(button_t2_pressed()){current_state = HALTED;}
             result_oa = obstacle_procedure(obstacle_cm);
             if(!result_oa){ // se 0
                 current_state = HALTED;
@@ -73,13 +75,24 @@ int obstacle_procedure(int obstacle_cm)
     switch (current_o_state)
     {
     case ROTATE_CLOCK:
-        if (count_obst < 250)
+        if (count_obst == 0) { // reset calcolo yaw con gyro
+            imu_reset_yaw_gyro();
+        }
+/*         if (count_obst < 250)
         {
             motor_forward_clockwise(50, 0); // rotazione clockwise da verificare
             count_obst++;
         }
         else
         {
+            count_obst = 0;
+            current_o_state = GO_FORWARD;
+        } */
+            imu_update_yaw();   // integrazione qui
+            motor_forward_clockwise(50, 0);
+
+        if (fabs(imu_get_yaw_gyro()) >= 90.0f) {
+            motor_stop();
             count_obst = 0;
             current_o_state = GO_FORWARD;
         }

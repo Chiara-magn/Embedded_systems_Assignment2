@@ -42,7 +42,7 @@ void imu_set_active(imu_device_t dev);
 void imu_read_acc(sensor_data_t *data);
 void imu_read_mag(sensor_data_t *data);
 void imu_read_gyro(sensor_data_t *data);
-void imu_update_yaw_gyro(void);
+void imu_update_yaw(void);
 void imu_reset_yaw_gyro(void);
 float imu_get_yaw_gyro(void);
 
