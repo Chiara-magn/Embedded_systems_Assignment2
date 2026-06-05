@@ -28,19 +28,27 @@ void task1(void* param)// 500 Hz
 {
     obstacle_cm = IR_ReadDistance_cm(); // IR sensor read 
 
-    if(uart_command_buffer()){ 
+     if(uart_command_buffer()){ 
         current_speed = uart_get_speed();   
         current_yaw = uart_get_yawrate(); 
     } 
     fsm_update_state(obstacle_cm);
-    if(get_current_state() == MOVING){
-        if(current_speed == 0 && current_yaw == 0)
-            motor_forward(60);
+    switch(get_current_state()) {
+        case MOVING:
+            if(current_speed == 0 && current_yaw == 0)
+                motor_forward(60);
             else
-            motor_speed_yaw(current_speed, current_yaw);
-    }
-    else
+                motor_speed_yaw(current_speed, current_yaw);
+            break;
+        case OBSTACLE_AVOIDANCE:
+            // i motori sono già gestiti dentro fsm_update_state()
+            // non fare nulla qui
+            break;
+        case HALTED:
+        default:
             motor_stop();
+            break;
+    } 
 }  
 
 void task2(void* param) // 10 Hz
@@ -52,7 +60,7 @@ void task2(void* param) // 10 Hz
     // calcolo angoli
     imu_roll_pitch_yaw(&accel, &mag, &angles);
     //messaggio valori
-    char distance[20]; // controllare grandezza
+    char distance[30]; // controllare grandezza
     sprintf(distance, "$MDIST,%d*\r\n", obstacle_cm);
     uart_send_string(distance);
     // invio $MANGLE,<roll>,<pitch>,<yaw>*
@@ -73,7 +81,7 @@ void task3(void* param) // 1 Hz
     led_toggle_ld1();
     // $MBATT,v_batt*
     battery_volt = Battery_ReadVoltage();
-    char msg[20]; // controllare grandezza
+    char msg[30]; // controllare grandezza
     sprintf(msg, "$MBATT,%.2f*\r\n", battery_volt);
     uart_send_string(msg);
     current_light =  get_light_state();

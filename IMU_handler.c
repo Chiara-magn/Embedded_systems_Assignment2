@@ -75,6 +75,14 @@ void imu_init(void) {
     // if we reach this point, all IDs are correct
     uart_send_string("All Chip IDs are CORRECT!\r\n");
 
+    imu_write_register(IMU_GYR, 0x0F, 0x04);  // range ±125°/s → divisore 262.4
+    tmr_wait_ms(TIMER1, 5);
+
+    uint8_t gyr_range = imu_read_register(IMU_GYR, 0x0F);
+    char msg[30];
+    sprintf(msg, "GYR_RANGE: 0x%02X\r\n", gyr_range);
+    uart_send_string(msg);  // deve stampare 0x04
+
     imu_set_bandwidth(15);  // 1000 Hz default
 }
 

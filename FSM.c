@@ -43,7 +43,13 @@ void fsm_update_state(int obstacle_cm){
             break;
         case OBSTACLE_AVOIDANCE:
             current_light_state = 2;
-            if(button_t2_pressed()){current_state = HALTED;}
+            if(button_t2_pressed()) {
+                current_state = HALTED;
+                current_o_state = ROTATE_CLOCK;  // reset anche la sotto-FSM
+                count_obst = 0;
+                count_3 = 0;
+                break;  // <-- esci subito, non eseguire obstacle_procedure
+            }
             result_oa = obstacle_procedure(obstacle_cm);
             if(!result_oa){ // se 0
                 current_state = HALTED;
@@ -77,17 +83,8 @@ int obstacle_procedure(int obstacle_cm)
     case ROTATE_CLOCK:
         if (count_obst == 0) { // reset calcolo yaw con gyro
             imu_reset_yaw_gyro();
+            count_obst = 1;  // <-- segna che il reset è già stato fatto
         }
-/*         if (count_obst < 250)
-        {
-            motor_forward_clockwise(50, 0); // rotazione clockwise da verificare
-            count_obst++;
-        }
-        else
-        {
-            count_obst = 0;
-            current_o_state = GO_FORWARD;
-        } */
             imu_update_yaw();   // integrazione qui
             motor_forward_clockwise(50, 0);
 
@@ -99,7 +96,7 @@ int obstacle_procedure(int obstacle_cm)
         return 1; // =1 rimango in obstacle avoidance
         break;
     case GO_FORWARD:
-        if (count_obst < 2000)
+        if (count_obst < 1000)  // 1000 x 2ms = 2000 ms = 2s
         {
             motor_forward(100); 
             count_obst++;
@@ -112,23 +109,29 @@ int obstacle_procedure(int obstacle_cm)
         return 1; // =1 rimango in obstacle avoidance
         break;
     case ROTATE_COUNT_CLOCK:
-        if (count_obst < 250)
-        {
-            motor_forward_clockwise(0, 50); // rotazione count clockwise da verificare
-            count_obst++;
+        if (count_obst == 0) {
+            imu_reset_yaw_gyro();
+            count_obst = 1;
         }
-        else
-        {
+        imu_update_yaw();
+        motor_forward_clockwise(0, 50);
+
+        if (fabs(imu_get_yaw_gyro()) >= 90.0f) {
+            motor_stop();
             count_obst = 0;
+            count_3 ++;
             current_o_state = CHECK_PROCEDURE;
         }
-        return 1; // =1 rimango in obstacle avoidance
+        return 1;
         break;
     case CHECK_PROCEDURE:
-        count_3 ++;
-        if (count_3 == 2) {
+        if (count_3 >= 3) {
             count_3 = 0; 
-            return 0; }// passa alla fsm 0 -> HALTED 
+            if (obstacle_cm < OBSTACLE_DETECTED_THRESHOLD)
+                return 0;  // ostacolo ancora presente -> HALTED
+            else
+                return 2;  // ostacolo sparito -> MOVING
+            }// passa alla fsm 0 -> HALTED 
         else{
             if (obstacle_cm < OBSTACLE_DETECTED_THRESHOLD)
             {
@@ -136,7 +139,6 @@ int obstacle_procedure(int obstacle_cm)
                 return 1;
             }
             else {
-                count_3 = 0;
                 return 2; 
             }// per andare in moving
         }
