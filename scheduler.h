@@ -13,6 +13,6 @@ typedef struct {
 
 void scheduler_init(void);
 void scheduler_run(void);
-int scheduler_add(TaskFn f, int N, void* params);
+int scheduler_add(TaskFn f, int N, int offset, void* params);
 
 #endif

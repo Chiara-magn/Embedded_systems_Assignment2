@@ -179,6 +179,56 @@ uint8_t imu_read_chip_id(imu_device_t dev)
 }
  */
 
+//////// test
+void imu_read_mag(sensor_data_t *data)
+{
+    uint8_t buf[6];
+    
+    imu_select(IMU_MAG);
+    spi_write(0x42 | 0x80);  // indirizzo primo registro | read bit
+    buf[0] = spi_write(0x00);  // X LSB
+    buf[1] = spi_write(0x00);  // X MSB
+    buf[2] = spi_write(0x00);  // Y LSB
+    buf[3] = spi_write(0x00);  // Y MSB
+    buf[4] = spi_write(0x00);  // Z LSB
+    buf[5] = spi_write(0x00);  // Z MSB
+    ACC_CS_LAT = 1;
+    GYR_CS_LAT = 1;
+    MAG_CS_LAT = 1;
+
+    data->x = ((int16_t)buf[1] << 8 | (buf[0] & 0xF8)) >> 3;
+    data->y = ((int16_t)buf[3] << 8 | (buf[2] & 0xF8)) >> 3;
+    data->z = ((int16_t)buf[5] << 8 | (buf[4] & 0xFE)) >> 1;
+}
+
+void imu_read_acc(sensor_data_t *data)
+{
+    uint8_t buf[6];
+    
+    imu_select(IMU_ACC);
+    spi_write(0x02 | 0x80);  // indirizzo primo registro | read bit
+    buf[0] = spi_write(0x00);  // X LSB
+    buf[1] = spi_write(0x00);  // X MSB
+    buf[2] = spi_write(0x00);  // Y LSB
+    buf[3] = spi_write(0x00);  // Y MSB
+    buf[4] = spi_write(0x00);  // Z LSB
+    buf[5] = spi_write(0x00);  // Z MSB
+    ACC_CS_LAT = 1;
+    GYR_CS_LAT = 1;
+    MAG_CS_LAT = 1;
+
+    data->x = ((int16_t)buf[1] << 8 | (buf[0] & 0xF0)) >> 4;
+    data->y = ((int16_t)buf[3] << 8 | (buf[2] & 0xF0)) >> 4;
+    data->z = ((int16_t)buf[5] << 8 | (buf[4] & 0xF0)) >> 4;
+}
+
+
+
+
+
+
+
+/*
 // read all data from magentometer
 void imu_read_mag(sensor_data_t *data)
 {
@@ -204,7 +254,7 @@ void imu_read_mag(sensor_data_t *data)
 }
 
 
-/*
+
   Read all three accelerometer axes via SPI
   Data is 12-bit signed (two's complement), stored in register pairs:
   X: 0x02 (LSB), 0x03 (MSB)
@@ -215,7 +265,7 @@ void imu_read_mag(sensor_data_t *data)
   data -> Pointer to struct where results will be stored
 
   To get filtered values you have to set 0x00 the 0x13 register (default mode)
- */
+ 
 
 void imu_read_acc(sensor_data_t *data)
 {
@@ -239,7 +289,7 @@ void imu_read_acc(sensor_data_t *data)
     lsb &= 0xF0;
     data->z = ((int16_t)msb << 8 | lsb) >> 4;
 }
-
+*/
 
 
 

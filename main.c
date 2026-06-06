@@ -39,18 +39,22 @@ void setup() {
 
     // Inizializza e registra i task
     scheduler_init();
-    scheduler_add(task1, 1,   NULL); // 500 Hz → N=1
+/*     scheduler_add(task1, 1,   NULL); // 500 Hz → N=1
     scheduler_add(task2, 50,  NULL); // 10 Hz  → N=50
-    scheduler_add(task3, 500, NULL); // 1 Hz   → N=500
+    scheduler_add(task3, 500, NULL); // 1 Hz   → N=500 */
+    scheduler_add(task1,   1,   0, NULL); // parte subito
+    scheduler_add(task2,  50,  17, NULL); // prima esecuzione al tick 17+50=67... poi ogni 50
+    scheduler_add(task3, 500, 275, NULL); // prima esecuzione al tick 250+500... poi ogni 500
 }
+int missed_deadlines = 0;
 
 int main() {
     setup();
     tmr_setup_period (TIMER1, 2);
     tmr_setup_period (TIMER3, 2); // adc
-    
+   // tmr_setup_period(TIMER4, 100); // debug purposes
+
     while (1) {
-    //    led_toggle_ld2();
         scheduler_run();
         tmr_wait_period(TIMER1);
     }

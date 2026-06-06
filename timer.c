@@ -15,6 +15,8 @@ void timer_init(void)
     IFS0bits.T3IF = 0;   // Clear Timer3 interrupt flag
     IEC0bits.T3IE = 0;   // Disable Timer3 interrupt 
 
+    IFS1bits.T4IF = 0;   // Clear Timer4 interrupt flag
+    IEC1bits.T4IE = 0;   // Disable Timer4 interrupt 
 }
 
 // tmr_setup_period
@@ -55,7 +57,14 @@ void tmr_setup_period(int timer, int ms){
             IFS0bits.T3IF = 0;
             T3CONbits.TON = 1;
             break;  
-            
+        case TIMER4:
+            TMR4 = 0;
+            PR4 = (ms * (72000000LL/256)) / 1000;
+            T4CONbits.TCKPS = 3;
+            IFS1bits.T4IF = 0;
+            T4CONbits.TON = 1;
+            break;  
+                
     }
 }
 
@@ -97,6 +106,14 @@ int tmr_wait_period(int timer){
                 IFS0bits.T3IF = 0;}
             while(!IFS0bits.T3IF); 
                 IFS0bits.T3IF = 0;
+            break;
+
+        case TIMER4:
+            if (IFS1bits.T4IF == 1){
+                ret = 1;
+                IFS1bits.T4IF = 0;}
+            while(!IFS1bits.T4IF); 
+                IFS1bits.T4IF = 0;
             break;
 
     }
@@ -168,8 +185,30 @@ void tmr_wait_ms(int timer, int ms){
                 IFS0bits.T3IF = 0;      
             }  
             break;
+
+        case TIMER4:
+            tmr_setup_period(TIMER4,200);
+            while(ms > 200){
+                   
+                while(!IFS1bits.T4IF); 
+                IFS1bits.T4IF = 0;  
+                
+                ms = ms-200;}
+            
+            if(ms>0){
+                tmr_setup_period(TIMER4,ms);
+                        
+                while(!IFS1bits.T4IF); 
+                IFS1bits.T4IF = 0;      
+            }  
+            break;
             
     }
     
 
+}
+
+
+unsigned int tmr_get_ticks(void) {
+    return TMR1; // registro del timer hardware
 }

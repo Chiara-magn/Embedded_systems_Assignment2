@@ -23,6 +23,9 @@ int uart_get_yawrate(void);
 int uart_get_rx_count(void);
 int uart_get_tx_count(void);
 
+// useful to save some time for deadlines
+void uart_append_fixed(char *buf, int *pos, float val);
+
 // Circular buffer to get user commands
 #define RX_BUFFER_SIZE 32 // emptied by command buffer max ~10 char/ciclo for 9600 baud
 

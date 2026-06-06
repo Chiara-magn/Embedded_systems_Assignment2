@@ -317,3 +317,54 @@ int uart_get_tx_count(void) {
  */
 
 
+
+
+/*
+ * append_fixed - writes a float as a fixed-point string into a buffer
+ * without using sprintf, to avoid slow float formatting on dsPIC.
+ *
+ * Example: -3.15 → writes '-', '3', '.', '1', '5' into buf
+ *
+ * buf  - output character buffer
+ * pos  - current write position in buffer (updated after each character)
+ * val  - float value to write (max 2 decimal places)
+ */
+
+ 
+void uart_append_fixed(char *buf, int *pos, float val) {
+    
+    // multiply by 100 to keep 2 decimal places as an integer
+    // example: -3.15 * 100 = -315
+    int v = (int)(val * 100.0f);
+    
+    // write the sign and work with the absolute value
+    if (v < 0) { buf[(*pos)++] = '-'; v = -v; }
+    
+    // split integer and decimal parts
+    // example: 315 / 100 = 3 (integer part)
+    //          315 % 100 = 15 (decimal part)
+    int integer_part = v / 100;
+    int decimal_part = v % 100;
+    
+    // write integer part digit by digit, without leading zeros
+    // example: 3   → writes '3'
+    //          39  → writes '3', '9'
+    //          123 → writes '1', '2', '3'
+    if (integer_part >= 100) {
+        buf[(*pos)++] = '0' + (integer_part / 100);        // hundreds
+        buf[(*pos)++] = '0' + (integer_part / 10 % 10);   // tens
+        buf[(*pos)++] = '0' + (integer_part % 10);         // units
+    } else if (integer_part >= 10) {
+        buf[(*pos)++] = '0' + (integer_part / 10);         // tens
+        buf[(*pos)++] = '0' + (integer_part % 10);         // units
+    } else {
+        buf[(*pos)++] = '0' + integer_part;                // units only
+    }
+    
+    // write decimal point and always 2 decimal digits
+    // example: 15 → writes '.', '1', '5'
+    //          05 → writes '.', '0', '5'
+    buf[(*pos)++] = '.';
+    buf[(*pos)++] = '0' + (decimal_part / 10);   // first decimal digit
+    buf[(*pos)++] = '0' + (decimal_part % 10);   // second decimal digit
+}
