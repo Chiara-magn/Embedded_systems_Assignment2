@@ -86,7 +86,7 @@ int obstacle_procedure(int obstacle_cm)
             count_obst = 1;  // <-- segna che il reset è già stato fatto
         }
             imu_update_yaw();   // integrazione qui
-            motor_forward_clockwise(50, 0);
+            motor_forward_clockwise(80, 0);
 
         if (fabs(imu_get_yaw_gyro()) >= 90.0f) {
             motor_stop();
@@ -114,7 +114,7 @@ int obstacle_procedure(int obstacle_cm)
             count_obst = 1;
         }
         imu_update_yaw();
-        motor_forward_clockwise(0, 50);
+        motor_forward_clockwise(0, 80);
 
         if (fabs(imu_get_yaw_gyro()) >= 90.0f) {
             motor_stop();
