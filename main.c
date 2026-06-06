@@ -52,11 +52,14 @@ int main() {
     setup();
     tmr_setup_period (TIMER1, 2);
     tmr_setup_period (TIMER3, 2); // adc
-   // tmr_setup_period(TIMER4, 100); // debug purposes
+   // tmr_setup_period(TIMER4, 100); // debug purpositiones
 
     while (1) {
         scheduler_run();
-        tmr_wait_period(TIMER1);
+        if (tmr_wait_period(TIMER1)) {
+            missed_deadlines++;
+            led_toggle_ld2();  // lampeggia quando missa una deadline
+        }
     }
     return 0;
 } 

@@ -3,7 +3,7 @@
 
 ## Structure
 
-| Path                                    | Purpose                                                                                                                             |
+| Path                                    | Purpositione                                                                                                                             |
 |-----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
 | _build                                  | The [CMake build tree](https://cmake.org/cmake/help/latest/manual/cmake.1.html#introduction-to-cmake-buildsystems), can be deleted. |
 | cmake                                   | Generated [CMake](https://cmake.org/) files. May be deleted if user.cmake has not been added                                        |

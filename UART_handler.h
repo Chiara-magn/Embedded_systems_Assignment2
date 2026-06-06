@@ -24,12 +24,14 @@ int uart_get_rx_count(void);
 int uart_get_tx_count(void);
 
 // useful to save some time for deadlines
-void uart_append_fixed(char *buf, int *pos, float val);
+void uart_append_fixed(char *buf, int *position, float val);
 
 // Circular buffer to get user commands
 #define RX_BUFFER_SIZE 32 // emptied by command buffer max ~10 char/ciclo for 9600 baud
 
-#define UART_COMMAND_BUFFER_SZ 32 // contains only correctly formatted commands, emptied by command processor
+#define UART_COMMAND_BUFFER_SZ 32 //// !! nota per Mari, dovrebbe bastare 5, 
+// per sicurezza 8 con il nuovo parser
+// contains only correctly formatted commands, emptied by command processor
 // Max command length: $XX,dd* (7 chars) + null terminator.
 
 #define TX_BUFFER_SIZE   64  // contains data from imu to UART, emptied by TX ISR

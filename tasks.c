@@ -55,7 +55,6 @@ void task1(void* param)// 500 Hz
             break;
         case OBSTACLE_AVOIDANCE:
             // i motori sono già gestiti dentro fsm_update_state()
-            // non fare nulla qui
             break;
         case HALTED:
         default:
@@ -161,16 +160,20 @@ void task2(void* param) // 10 Hz
 
     char msg[50];
     int pos = 0;
-    msg[pos++]='$'; msg[pos++]='M'; msg[pos++]='A';
-    msg[pos++]='N'; msg[pos++]='G'; msg[pos++]='L';
-    msg[pos++]='E'; msg[pos++]=',';
+
+    // build $MANGLE message manually to avoid slow sprintf with floats
+    const char *header = "$MANGLE,";
+    while (*header) msg[pos++] = *header++;
+
     uart_append_fixed(msg, &pos, angles.roll);
-    msg[pos++]=',';
+    msg[pos++] = ',';
     uart_append_fixed(msg, &pos, angles.pitch);
-    msg[pos++]=',';
+    msg[pos++] = ',';
     uart_append_fixed(msg, &pos, angles.yaw);
-    msg[pos++]='*'; msg[pos++]='\r'; msg[pos++]='\n'; msg[pos++]='\0';
-    uart_send_string(msg);
+    msg[pos++] = '*';
+    msg[pos++] = '\r';
+    msg[pos++] = '\n';
+    msg[pos++] = '\0';
 
     if(button_t3_pressed()) {
         int tx_count = uart_get_tx_count();
@@ -181,8 +184,15 @@ void task2(void* param) // 10 Hz
     }
 
     blink_counter++;
-    if (blink_counter >= 10) blink_counter = 0;
-    blink = (blink_counter == 0) ? 1 : 0;
+    if (blink_counter >= 10) {
+        blink_counter = 0;
+    }
+    // con if/else
+    if (blink_counter < 2) {
+        blink = 1;  // acceso solo quando counter vale 0
+    } else {
+        blink = 0;  // spento per tutti gli altri valori (1,2,3...9)
+    }
 
     current_light = get_light_state();
     switch (current_light) {
@@ -207,16 +217,6 @@ void task2(void* param) // 10 Hz
 
  //   t2_elapsed = TMR4 - t_start;  // deadline debug
 }
-
-
-
-
-
-
-
-
-
-
 
 
 
