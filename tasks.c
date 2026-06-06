@@ -9,6 +9,7 @@
 #include "FSM.h"
 #include "IMU_handler.h"
 #include "battery_handler.h"
+#include "button_handler.h"
 
 
 // Struct to hold raw accelerometer data (x, y, z as int16_t) and magnetometer data 
@@ -74,9 +75,10 @@ void task1(void* param)// 500 Hz
     uart_send_string(msg);
     // Button t3 
     if(button_t3_pressed()) {
-    char msg[30];
-    sprintf(msg, "$MBUF,%d,%d*\r\n", uart_get_tx_count(), uart_get_rx_count());
-    uart_send_string(msg);
+        int tx_count = uart_get_tx_count();
+        int rx_count = uart_get_rx_count();
+        sprintf(msg, "$MBUF,%d,%d*\r\n", tx_count, rx_count);
+        uart_send_string(msg);
     }
 
     // Blink a 1 Hz gestito a 10 Hz: toggle ogni 5 chiamate (5 * 100ms = 500ms)
