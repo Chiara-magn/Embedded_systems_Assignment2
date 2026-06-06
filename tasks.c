@@ -24,6 +24,10 @@ int current_yaw = 0;
 float battery_volt = 0;
 int current_light = 0; 
 
+// Variabile globale o condivisa
+static int blink_counter = 0;
+static int blink = 0;
+
 void task1(void* param)// 500 Hz 
 {
     obstacle_cm = IR_ReadDistance_cm(); // IR sensor read 
@@ -74,6 +78,47 @@ void task1(void* param)// 500 Hz
     sprintf(msg, "$MBUF,%d,%d*\r\n", uart_get_tx_count(), uart_get_rx_count());
     uart_send_string(msg);
     }
+
+    // Blink a 1 Hz gestito a 10 Hz: toggle ogni 5 chiamate (5 * 100ms = 500ms)
+    blink_counter++;
+    if (blink_counter >= 10) {
+        blink_counter = 0;
+    }
+    // con if/else
+    if (blink_counter == 0) {
+        blink = 1;  // acceso solo quando counter vale 0
+    } else {
+        blink = 0;  // spento per tutti gli altri valori (1,2,3...9)
+    }
+    // Gestione luci
+    current_light = get_light_state();
+    switch (current_light)
+    {
+    case 0: // HALTED 
+        // blinking lights
+        right_lights_set(blink);
+        left_lights_set(blink);
+        // low intensity 0
+        low_intensity_set(0);
+        break;
+    case 1: // MOVING
+        // lights off
+        left_lights_set(0);
+        right_lights_set(0);
+        // low intensity on
+        low_intensity_set(1);
+        break;
+    case 2: // OBSTACLE_AVOIDANCE
+        // right blink
+        right_lights_set(blink);
+        // left off
+        left_lights_set(0);
+        // low intensity on
+        low_intensity_set(1);
+        break;
+    default:
+        break;
+    }
 } 
 
 
@@ -88,38 +133,4 @@ void task3(void* param) // 1 Hz
     sprintf(msg, "$MBATT,%.2f*\r\n", battery_volt);
     uart_send_string(msg);
 
-    static int blink = 0;
-    blink = !blink;  // alterna 0 e 1 ogni secondo
-
-    current_light =  get_light_state();
-    switch (current_light)
-    {
-    case 0:
-        // HALTED 
-        // blinking lights
-        right_lights_set(blink); 
-        left_lights_set(blink);
-        // low intensity off
-        low_intensity_set(0);
-        break;
-    case 1:
-        // MOVING 
-        // left, right off
-        left_lights_set(0);
-        right_lights_set(0);
-        // low intensity on
-        low_intensity_set(1);
-        break;
-    case 2:
-        // OBSTACLE_AVOIDANCE 
-        // blink right lights
-        right_lights_set(blink); 
-        // low intensity on 
-        low_intensity_set(1);
-        // left lights off
-        left_lights_set(0);
-        break;
-    default:
-        break;
-    }
 }
