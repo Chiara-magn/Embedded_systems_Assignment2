@@ -174,6 +174,7 @@ void task2(void* param) // 10 Hz
     msg[pos++] = '\r';
     msg[pos++] = '\n';
     msg[pos++] = '\0';
+    uart_send_string(msg);
 
     if(button_t3_pressed()) {
         int tx_count = uart_get_tx_count();
