@@ -29,12 +29,11 @@ void uart_append_fixed(char *buf, int *position, float val);
 // Circular buffer to get user commands
 #define RX_BUFFER_SIZE 32 // emptied by command buffer max ~10 char/ciclo for 9600 baud
 
-#define UART_COMMAND_BUFFER_SZ 32 //// !! nota per Mari, dovrebbe bastare 5, 
-// per sicurezza 8 con il nuovo parser
+#define UART_COMMAND_BUFFER_SZ 8 // max 3 characters 
 // contains only correctly formatted commands, emptied by command processor
-// Max command length: $XX,dd* (7 chars) + null terminator.
 
-#define TX_BUFFER_SIZE   64  // contains data from imu to UART, emptied by TX ISR
+#define TX_BUFFER_SIZE   128  // contains data from imu to UART, emptied by TX ISR
+// worst case scenario task2 + task3 messages, total bytes in the buffer 60/63. with some margin 128
 
 // Circular buffer struct — used for both RX and TX buffers.
 // head: index where next character will be written by ISR (RX) or main code (TX)
