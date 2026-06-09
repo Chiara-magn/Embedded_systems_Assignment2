@@ -4,10 +4,13 @@
 
 volatile int total_chars = 0; // Total characters received (for debugging)
 
-// Circular buffer instances — rx uses RX_BUFFER_SIZE, tx uses TX_BUFFER_SIZE
+// arrays for RX and TX circular buffers (physical memory storage)
+// defined as volatile since they are accessed in ISRs
 static volatile char rx_storage[RX_BUFFER_SIZE];
 static volatile char tx_storage[TX_BUFFER_SIZE];
 
+// Circular buffer structures for RX and TX, containing pointers 
+// to the storage arrays and head/tail indices
 static circular_buffer_t rx_buf = {
     .buf = rx_storage,
     .head = 0,
@@ -26,20 +29,22 @@ static circular_buffer_t tx_buf = {
 // command buffer for parsing
 static char command_buffer[UART_COMMAND_BUFFER_SZ]; //stores incoming command
 static uint8_t i = 0;       // Index into command_buffer
-/* static int current_hz = 10; // Current $ACC send frequency (default 10 Hz)
-static int current_bw = 15; // Current accelerometer bandwidth (default 15 = 1000 Hz) */
 static int current_speed = 0; // Current speed
 static int current_yawrate = 0; // current yaw
 
-/* Parser states for incoming UART commands
-Splits $BW and $HZ cases to avoid accepting invalid values
- */
+// static int current_hz = 10; // Current $ACC send frequency (default 10 Hz)
+// static int current_bw = 15; // Current accelerometer bandwidth (default 15 = 1000 Hz) 
+
+
+// Parser states for incoming UART commands
 typedef enum { 
     STATE_WAIT_START,   // Waiting for '$'
-    STATE_MSG,          //  PCREF check
+    STATE_MSG,          // PCREF check
     STATE_COMMA1,       // Waiting for first ','
     STATE_COMMA2,       // Waiting for speed and second ','
 } parser_state_t;
+
+// initialize parser state to wait for start of command
 static parser_state_t state = STATE_WAIT_START;
 
 
@@ -47,8 +52,8 @@ static parser_state_t state = STATE_WAIT_START;
 // UART initialization function
 void uart_init(void){
 	
-    TRISDbits.TRISD0 = 0;               // output D0 -> TX
-    TRISDbits.TRISD11 = 1;              // input D11 -> RX
+    UART_TRIS_TX = 0;               // output D0 -> TX
+    UART_TRIS_RX = 1;              // input D11 -> RX
     
     RPINR18bits.U1RXR = UART1_RX_RPIN;  // Map UART1 RX to RPI75 (RD11)
     RPOR0bits.RP64R   = 1;              // Map UART1 TX to RP64  (RD0)
@@ -56,8 +61,7 @@ void uart_init(void){
     U1STA = 0x00;                       // reset control and status register
     U1MODE = 0x00;                      // reset mode register
     U1BRG = 468 ;                       // Baud rate setting (72000000/16*9600)-1
-   // U1BRG = 38; //BAUDrate 115200
-    
+   
     U1MODEbits.UARTEN = 1;              // Enable UART
     U1STAbits.UTXEN = 1;                // Enable TX
     
@@ -169,15 +173,20 @@ void uart_send_char(char c) {
 }
 
 /*
-  State machine parser — reads RX buffer and detects complete commands
-  Valid commands: $BW,xx* and $HZ,yy* (and also values accepted for each)
-  return true if a complete valid-format command was received, false otherwise
+    uart_command_buffer - non-blocking parser for incoming UART commands in the format $PCREF,speed,yawrate*
+    It uses a state machine to parse the command character by character as they arrive in the RX buffer.
+    Returns true if a valid command was fully received and parsed, false otherwise.
+    On valid command, updates global variables current_speed and current_yawrate with parsed values.
+    On invalid command, sends $ERR,1* or $ERR,2* over UART depending on which value was invalid.
  */
 
 bool uart_command_buffer(void) {
+    
+    // variable to keep track of parsing state across function calls
     bool string_ready = false;
 
-    while (uart_available()) {
+    while (uart_available()) { //if there are characters in the RX buffer, read and parse them one by one
+        
         char c = uart_read_char();
 
         switch (state) {
@@ -194,7 +203,7 @@ bool uart_command_buffer(void) {
                 if (c == "PCREF"[i]) {
                     i++;
                 } else if (i == 5 && c == ',') {
-                    // ha letto tutti e 5 i caratteri e ora arriva la virgola
+                    // all 5 characters of "PCREF" matched, now waiting for ',' before speed value
                     i = 0;
                     state = STATE_COMMA1;
                 } else {
@@ -204,9 +213,13 @@ bool uart_command_buffer(void) {
                 break;
 
             case STATE_COMMA1:
+                // we have reached next comma, check if the speed value is valid, 
+                // if so move to next state to parse yawrate, if not send error and reset parser    
                 if (c == ',') {
                     command_buffer[i] = '\0';
+                    // convert speed string to integer 
                     int val = atoi(command_buffer);
+                    // check if speed is in valid range -100 to 100, if not send error message and reset parser
                     if (val < -100 || val > 100) {
                         uart_send_string("$ERR,1*");
                         i = 0;
@@ -216,9 +229,13 @@ bool uart_command_buffer(void) {
                         i = 0;
                         state = STATE_COMMA2;
                     }
+
+                // if we receive a valid character for speed value (digit or minus sign), 
+                //store it in command_buffer for later parsing    
                 } else if (c == '-' || (c >= '0' && c <= '9')) {
                     command_buffer[i] = c;
                     i++;
+
                 } else {
                     i = 0;
                     state = STATE_WAIT_START;
@@ -226,8 +243,12 @@ bool uart_command_buffer(void) {
                 break;
 
             case STATE_COMMA2:
+
+                // we have reached the end of the command, check if yawrate value is valid,
+                // if so we have a complete valid command and can return true, if not send error
                 if (c == '*') {
                     command_buffer[i] = '\0';
+                    // convert yawrate string to integer
                     int val = atoi(command_buffer);
                     if (val < -100 || val > 100) {
                         uart_send_string("$ERR,2*");
@@ -249,6 +270,7 @@ bool uart_command_buffer(void) {
                 break;
         }
 
+        // safety check to avoid overflow of command_buffer
         if (i >= UART_COMMAND_BUFFER_SZ - 1) {
             i = 0;
             state = STATE_WAIT_START;
@@ -270,51 +292,6 @@ int uart_get_rx_count(void) {
 int uart_get_tx_count(void) {
     return (tx_buf.head - tx_buf.tail + tx_buf.size) % tx_buf.size;
 }
-
-/*
-  Validate and apply a parsed command from command_buffer
-  Sends $ERR,1* on invalid values and return true if command was valid and applied, false otherwise.
-  Validates $BW,xx* (8 ≤ xx ≤ 15) and $HZ,yy* (yy ∈ {0,1,2,5,10})
- */
-
-/* bool uart_validate_command(void) { 
-
-    // Convert ASCII digits to integer value
-    // e.g. '1','5' → (1*10)+5 = 15
-    // '0' = 48 in ASCII, so '5'-'0' = 5
-
-    int tens  = command_buffer[2] - '0'; // tens digit
-    int units = command_buffer[3] - '0'; // units digit
-
-    uint8_t data = tens * 10 + units; 
-
-    if (command_buffer[0] == 'B'){     // $BW command: set bandwidth
-        if (data <8 || data > 15){     // Valid range: 8 to 15
-            uart_send_string("$ERR,1*");
-            return false;}
-
-        current_bw = data;       // Update global variable with new bandwidth setting           
-        imu_set_bandwidth(data); // Apply to IMU register
-    }
-    if (command_buffer[0] == 'H'){     // $HZ command: set frequency
-        if (data != 0 && data != 1 && data != 2 && data != 5 && data != 10){
-            uart_send_string("$ERR,2*"); // Valid values: 0,1,2,5,10 only
-            return false;}
-            current_hz = data;
-    }
-    return true;
-}
- */
-/*
-  Get the current $ACC send frequency
-  return Current frequency in Hz (0 means disabled)
-  It will be used in main loop to determine how often to send $ACC messages based on user command
- */
-/* int uart_get_hz(void) {
-    return current_hz;
-}
- */
-
 
 
 
