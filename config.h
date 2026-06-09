@@ -9,10 +9,15 @@
 #define UART1_RX_RPIN   75   // UART1 RX mapped to RPI75 (RD11, input)
 #define UART1_TX_RPIN   64   // UART1 TX mapped to RP64  (RD0,  output)
 
+
 // SPI1 pin remapping
-#define SPI1_MISO_RPIN   17   // MISO        mapped to RPI17 (RA1,  input)
-#define SPI1_MOSI_RPIN   109  // MOSI        mapped to RP109 (RF13, output)
-#define SPI1_SCK_RPIN    108  // SCK1        mapped to RP108 (RF12, output)
+#define SPI1_MISO_RPIN   17        // MISO        mapped to RPI17 (RA1,  input)
+#define SPI1_MOSI_RPIN   0b000101  // MOSI        mapped to RP109 (RF13, output)
+#define SPI1_SCK_RPIN    0b000110  // SCK1        mapped to RP108 (RF12, output)
+
+#define MISO_TRIS    TRISAbits.TRISA1
+#define MOSI_TRIS    TRISFbits.TRISF13
+#define SCK_TRIS     TRISFbits.TRISF12
 
 // IMU Chip Select
 
@@ -28,6 +33,7 @@
 #define MAG_CS_TRIS    TRISDbits.TRISD6 // Magnetometer Chip Select → direction register
 #define MAG_CHIP_ID    0x32             // Expected chip ID 
 
+#define IMU_DT 0.002f   // integration delta t (500 Hz = 2 ms) for gyro integration to estimate yaw angle
 
 // LED
 #define LD1_LAT     LATAbits.LATA0       // LD1 connected to RA0       
@@ -72,15 +78,22 @@
 #define PWM_D_TRIS    TRISDbits.TRISD4 // PWM-D → RD4 → OC4
 #define OC4_RPIN      19
 
+// PWM parameters
+#define FCY     72000000UL              // 72 MHz
+#define FPWM    10000                   // 10 kHz frequency of the PWM signal
+#define PWM_PERIOD ((FCY / FPWM) - 1)   //period of the PWM signal
+
+
 // ADC channel assignments ---
 #define ADC_CH_BATTERY      AD1CSSLbits.CSS11      // AN11  → BAT-VSENSE line (slide 26)
 #define ADC_CH_IR           AD1CSSLbits.CSS15      // AN15   → IR Distance Sensor 
 
+
 // BATTERY
- 
 #define BATTERY_DIVIDER_RATIO   3.0f       // 3 resistors (R49, R51, R54): Vbat = 3 * Vadc 
 #define BATTERY_TRIS    TRISBbits.TRISB11  // RB11 as input
 #define BATTERY_ANSEL   ANSELBbits.ANSB11  // RB11 as analog input
+
 
 // IR infrared sensor
 #define OBSTACLE_DETECTED_THRESHOLD 15 // 15 cm
@@ -89,6 +102,10 @@
 
 #define IR_EN_TRIS   TRISBbits.TRISB9
 #define IR_EN_LAT    LATBbits.LATB9
+
+// SCHEDULER
+#define MAX_TASKS 3 // 3 tasks
+
 
 #endif
 

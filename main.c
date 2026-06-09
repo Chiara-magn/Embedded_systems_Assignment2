@@ -37,28 +37,30 @@ void setup() {
     buttons_init();
     ADC_init();
 
-    // Inizializza e registra i task
+    // inizialization of the scheduler and task registration
     scheduler_init();
-/*     scheduler_add(task1, 1,   NULL); // 500 Hz → N=1
-    scheduler_add(task2, 50,  NULL); // 10 Hz  → N=50
-    scheduler_add(task3, 500, NULL); // 1 Hz   → N=500 */
-    scheduler_add(task1,   1,   0, NULL); // parte subito
-    scheduler_add(task2,  50,  17, NULL); // prima esecuzione al tick 17+50=67... poi ogni 50
-    scheduler_add(task3, 500, 275, NULL); // prima esecuzione al tick 250+500... poi ogni 500
+
+    // tasks are never executed together with this timing configuration.
+    scheduler_add(task1,   1,   0, NULL); // starts immediately, then every 1 tick (500 Hz)
+    scheduler_add(task2,  50,  17, NULL); // first execution at tick 17, then every 50 ticks (10 Hz)
+    scheduler_add(task3, 500, 275, NULL); // first execution at tick 275,then every 500 ticks (1 Hz)
 }
+
 int missed_deadlines = 0;
 
 int main() {
     setup();
-    tmr_setup_period (TIMER1, 2);
+    tmr_setup_period (TIMER1, 2); // scheduler tick every 2 ms (500 Hz)
     tmr_setup_period (TIMER3, 2); // adc
+    
    // tmr_setup_period(TIMER4, 100); // debug purpositiones
 
     while (1) {
-        scheduler_run();
+        scheduler_run(); 
+
         if (tmr_wait_period(TIMER1)) {
             missed_deadlines++;
-            led_toggle_ld2();  // lampeggia quando missa una deadline
+            led_toggle_ld2();  // toggle LED on missed deadlines for visual feedback
         }
     }
     return 0;

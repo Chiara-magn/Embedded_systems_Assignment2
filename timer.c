@@ -1,6 +1,5 @@
 #include "timer.h"
 
-// Initializes timers and enables global interrupts
 
 void timer_init(void)
 {
@@ -27,7 +26,7 @@ void timer_init(void)
 //          with FCY = 72,000,000 and prescaler = 256
 //
 // Parameters:
-//   timer - TIMER1, TIMER2, or TIMER3
+//   timer - TIMER1, TIMER2, TIMER3, TIMER4
 //   ms    - desired period in milliseconds
 
 void tmr_setup_period(int timer, int ms){ 
@@ -75,7 +74,7 @@ void tmr_setup_period(int timer, int ms){
 // Returns 0 if the period completed normally (no overrun).
 //
 // Parameters:
-//   timer - TIMER1, TIMER2, or TIMER3
+//   timer - TIMER1, TIMER2, TIMER3, or TIMER4
 // Returns:
 //   1 if deadline was missed (timer already expired on entry)
 //   0 if timing was met correctly
@@ -127,7 +126,7 @@ int tmr_wait_period(int timer){
 // long delays are split into 200 ms chunks to avoid overflow.
 //
 // Parameters:
-//   timer - TIMER1, TIMER2, or TIMER3
+//   timer - TIMER1, TIMER2, TIMER3, or TIMER4
 //   ms    - total delay in milliseconds
 
 void tmr_wait_ms(int timer, int ms){
@@ -208,7 +207,7 @@ void tmr_wait_ms(int timer, int ms){
 
 }
 
-
+// for debugging: returns the current tick count of the specified timer
 unsigned int tmr_get_ticks(void) {
-    return TMR1; // registro del timer hardware
+    return TMR1; 
 }

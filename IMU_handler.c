@@ -4,10 +4,7 @@
 #include "config.h"
 #include "timer.h"
 
-#define IMU_DT 0.002f   // integration delta t (500 Hz = 2 ms)
-
 static float yaw_deg_gyro = 0.0f;
-
 
 // Initializes SPI settings for IMU communication
 void imu_setup(void) {

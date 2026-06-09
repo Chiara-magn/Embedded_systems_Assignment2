@@ -8,12 +8,15 @@
 //RD2/4 forward
 //RD1/3 backward
 
-// Inizializzazione generale del modulo motori
+// !! Only one pin per side is active at a time.
+// duty cycle = speed (% of the high time in PWM signal)
+
+// Motor initialization, sets all motors to stop state
 void motor_init(void) {
-   motor_stop();   // <-- forza stato fermo all'avvio
+   motor_stop(); 
 }
 
-// Ferma tutti i motori
+// stop all motors
 void motor_stop(void) {
     setPWM_A(0);
     setPWM_B(0);
@@ -21,8 +24,7 @@ void motor_stop(void) {
     setPWM_D(0);
 }
 
-// Movimento in avanti (Assignment 1)
-// duty [40..100]%
+// moving forward with same speed on both motors
 void motor_forward(int duty) {   
     setPWM_A(0);
     setPWM_B(duty);
@@ -30,58 +32,69 @@ void motor_forward(int duty) {
     setPWM_D(duty);
 }
 
-// Movimento in avanti con rotazione oraria (Assignment 2)
+// moving forward with clockwise rotation
 // duty_left > duty_right
 void motor_forward_clockwise(int duty_left, int duty_right) {
 
-    // Lato sinistro piu veloce per girare a destra
+    // left faster to turn clockwise (right)
     setPWM_A(0);
     setPWM_B(duty_left);
 
-    // Lato destro piu lento
+    // right slowe
     setPWM_C(0);
     setPWM_D(duty_right);
 }
 
-// Funzione generale speed + yaw rate (Assignment 3)
-// speed  [-100..100]
-// yaw    [-100..100]
+/*
+  Function that converts a (speed, yaw) command into left/right PWM signals:
+    L = speed + yaw
+    R = speed - yaw
+  Both L and R are saturated to [-100, 100] to avoid overflow.
+
+  Positive yaw → turn left  (L slows down, R speeds up)
+  Negative yaw → turn right (L speeds up, R slows down)
+
+  Speed and yaw are expected to be in the range [-100, 100], where:
+    -100 = full speed backward / maximum right turn
+     0   = stop / no turn
+    +100 = full speed forward / maximum left turn
+ */
 void motor_speed_yaw(int speed, int yaw) {
 
-    // Calcolo velocita differenziale
+    // differential speed
     int L = speed + yaw;
     int R = speed - yaw;
 
-    // Saturazione
+    // saturation to avoid overflow and keep duty cycle in valid range
     if(L > 100) L = 100;
     if(L < -100) L = -100;
     if(R > 100) R = 100;
     if(R < -100) R = -100;
 
-    
-    if(L > 0) {          // avanti
+    // LEFT SIDE
+    if(L > 0) {          // forward
         setPWM_A(0);
         setPWM_B(L);
     }
-    else if(L < 0) {    // indietro
+    else if(L < 0) {    // backward
         setPWM_A(-L);
         setPWM_B(0);
     }
-    else {                // fermo
+    else {                // stop
         setPWM_A(0);
         setPWM_B(0);
     }
 
-    // LATO DESTRO
-    if(R > 0) {          // avanti
+    // RIGHT SIDE
+    if(R > 0) {          // forward
         setPWM_C(0);
         setPWM_D(R);
     }
-    else if(R < 0) {    // indietro
+    else if(R < 0) {    // backward
         setPWM_C(-R);
         setPWM_D(0);
     }
-    else {                // fermo
+    else {                // stop
         setPWM_C(0);
         setPWM_D(0);
     }
