@@ -4,18 +4,18 @@
 volatile uint16_t raw_ir  = 0;
 volatile uint16_t raw_bat = 0;
 
-/**
- * Initializes the ADC1 peripheral for dual-channel sequential scan.
- *
- * Configures ADC1 to sample two analog inputs in scan mode:
- *   - AN15 / RB15: IR distance sensor
- *   - AN11 / RB11: battery monitor
- *
- * Sampling is triggered automatically every time Timer3 overflows (every 2 ms,
- * SSRC=2). After both channels have been converted, the AD1 interrupt fires
- * (SMPI=1) and the results are read inside _AD1Interrupt().
- *
- * Call this function once at startup, after Timer3 has been configured.
+/*
+  Initialization of the ADC1 peripheral for dual-channel sequential scan.
+ 
+  Configures ADC1 to sample two analog inputs in scan mode:
+    - AN15 : IR distance sensor
+    - AN11 : battery monitor
+ 
+  Sampling is continuous and automatic. Every time Timer3 overflows (every 2 ms)
+  conversion starts (SSRC=2). After both channels have been converted, the AD1 interrupt 
+  fires (SMPI=1) and the results are read inside _AD1Interrupt().
+ 
+  Call this function once at startup, after Timer3 has been configured.
  */
 
 void ADC_init(){
@@ -35,18 +35,19 @@ void ADC_init(){
     AD1CON2bits.SMPI = 1;   // interrupt after scanning 2 channels (SMPI = N-1 = 1)
     AD1CON2bits.CSCNA = 1;  // enable input scan mode (use AD1CSSL to select channels)
 
-    // Configure analog input pins
+    
+    // Configure analog input pins GIA FATTO IN BATTERY_HANDLER.C E IR_HANDLER.C
     // IR sensor on RB15 / AN15
-    ANSELBbits.ANSB15 = 1;  // set RB15 as analog
-    TRISBbits.TRISB15 = 1;  // set RB15 as input
+    //IR_AN_ANSEL = 1;  // set RB15 as analog
+    //IR_AN_TRIS = 1;  // set RB15 as input
     // Battery monitor on RB11 / AN11
-    ANSELBbits.ANSB11 = 1;  // set RB11 as analog
-    TRISBbits.TRISB11 = 1;  // set RB11 as input
+    //BATTERY_ANSEL = 1;  // set RB11 as analog
+    //BATTERY_TRIS = 1;  // set RB11 as input
 
     AD1CSSL = 0;             // clear scan list before setting channels
 
-    AD1CSSLbits.CSS15 = 1;  // include AN15 in scan list (IR sensor)
-    AD1CSSLbits.CSS11 = 1;  // include AN11 in scan list (battery monitor)
+    ADC_CH_IR = 1;  // include AN15 in scan list (IR sensor)
+    ADC_CH_BATTERY = 1;  // include AN11 in scan list (battery monitor)
 
     // AD1CON2bits.ALTS = 0; // alternate input selection disabled (not used)
 
@@ -62,19 +63,19 @@ void ADC_init(){
 }
 
 
-/**
- *  ADC1 interrupt service routine.
- *
- * Called automatically by hardware when both ADC channels (AN15 and AN11)
- * have been converted. Reads the results from the ADC result buffer and
- * stores them in the shared volatile variables raw_ir and raw_bat.
- *
- * Buffer assignment (scan order, lowest channel index first):
- *   ADC1BUF0 <- AN11 (battery monitor, lower channel index)
- *   ADC1BUF1 <- AN15 (IR sensor, higher channel index)
- *
- * No polling is needed here because the ISR itself is the end-of-conversion
- * notification; AD1CON1bits.DONE is already set when the ISR fires.
+/*
+   ADC1 interrupt service routine.
+ 
+  Called automatically by hardware when both ADC channels (AN15 and AN11)
+  have been converted. Reads the results from the ADC result buffer and
+  stores them in the shared volatile variables raw_ir and raw_bat.
+ 
+  Buffer assignment (scan order, lowest channel index first):
+    ADC1BUF0 <- AN11 (battery monitor, lower channel index)
+    ADC1BUF1 <- AN15 (IR sensor, higher channel index)
+ 
+  No polling is needed here because the ISR itself is the end-of-conversion
+  notification; AD1CON1bits.DONE is already set when the ISR fires.
  */
 
  void __attribute__((interrupt, no_auto_psv)) _AD1Interrupt(void) {
@@ -92,29 +93,29 @@ uint16_t get_raw_battery(){
     return raw_bat;
 }
 
-/**
- *  Converts a raw 10-bit ADC value to the corresponding voltage.
- *
- * Assumes a 3.3 V reference (Vref+ = 3.3 V, Vref- = 0 V).
- * Formula: V = raw * 3.3 / 1023
- *
- *  raw  Raw ADC sample in the range [0, 1023].
- *  Voltage in volts [0.0, 3.3].
+/*
+   Converts a raw ADC value to the corresponding voltage.
+ 
+  Assumes a 3.3 V reference (Vref+ = 3.3 V, Vref- = 0 V).
+  Formula: V = raw * 3.3 / 1023
+ 
+  Raw ADC sample in the range [0, 1023].
+  Voltage in volts [0.0, 3.3].
  */
 
 float raw_to_voltage(uint16_t raw){
     return (float)raw * 3.3f / 1023.0f;
 }
 
-/**
- * Converts a sensor voltage to an estimated distance in centimetres.
- *
- * Uses a 4th-order polynomial fit to the IR sensor's voltage-distance curve.
- * Valid only within the sensor's specified operating range (verify against
- * the datasheet for the exact model in use).
- *
- *  voltage  Voltage read from the IR sensor [V].
- *          Estimated distance [cm].
+/*
+  Converts a sensor voltage to an estimated distance in centimetres.
+ 
+  Uses a 4th-order polynomial fit to the IR sensor's voltage-distance curve.
+  Valid only within the sensor's specified operating range (10 cm is 
+  (approximately) 2.1 V, at 1 m is 0.4 V).
+
+   voltage  Voltage read from the IR sensor [V].
+   return   Estimated distance [cm].
  */
    
 float voltage_to_dist(float voltage){

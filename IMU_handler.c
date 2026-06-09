@@ -4,15 +4,12 @@
 #include "config.h"
 #include "timer.h"
 
-#define IMU_DT 0.002f   // 1 / 500 Hz = 2 ms
+#define IMU_DT 0.002f   // integration delta t (500 Hz = 2 ms)
 
 static float yaw_deg_gyro = 0.0f;
 
-/*
-  Configure SPI clock polarity/phase for Bosch BMX055
-  Must be called before imu_init ? BMX055 requires clock idle LOW (CKP=0, CKE=1)
- */
 
+// Initializes SPI settings for IMU communication
 void imu_setup(void) {
     // Bosch BMX055 SPI protocol require idle LOW
     SPI1STATbits.SPIEN = 0;     // disable SPI to change settings
@@ -27,7 +24,7 @@ void imu_setup(void) {
   Magnetometer starts in sleep mode and must be explicitly woken up, 
   Accelerometer and Gyroscope start in normal mode.
 
-  Then for we checks IDs to see proper initialization and we 
+  Then we checks IDs to see proper initialization and we 
   set active mode for all, default bandwidth for the accelerometer 
   is 1000 Hz (value 15 in register 0x10)
  */
@@ -42,10 +39,10 @@ void imu_init(void) {
     GYR_CS_LAT = 1;
     MAG_CS_LAT = 1;
 
-     // Magnetometer starts in suspend mode ? must be woken up explicitly
+     // Magnetometer starts in suspend mode it must be woken up explicitly
     imu_write_register(IMU_MAG, 0x4B, 0x01);  // Enter sleep mode first
     tmr_wait_ms(TIMER1, 10);                   // Wait for mode transition
-    imu_write_register(IMU_MAG, 0x4C, 0x00);  // Enter active mode
+    imu_write_register(IMU_MAG, 0x4C, 0x00);   // Enter active mode
     tmr_wait_ms(TIMER1, 10);                   // Wait for stabilization
 
     // Debug: read and print chip IDs to verify communication
@@ -75,14 +72,21 @@ void imu_init(void) {
     // if we reach this point, all IDs are correct
     uart_send_string("All Chip IDs are CORRECT!\r\n");
 
-    imu_write_register(IMU_GYR, 0x0F, 0x04);  // range ±125°/s → divisore 262.4
+    // Set gyroscope measurement range to ±125°/s (register 0x0F, value 0x04)
+    // Narrower range = higher resolution. Suitable for a slow-moving buggy; change to 0x03 (±250°/s) if needed
+    imu_write_register(IMU_GYR, 0x0F, 0x04); 
     tmr_wait_ms(TIMER1, 5);
 
+
+    // Readback verification: re-read register 0x0F and print via UART
+    // Expected output: "GYR_RANGE: 0x04" — if different, SPI write failed
     uint8_t gyr_range = imu_read_register(IMU_GYR, 0x0F);
     char msg[30];
     sprintf(msg, "GYR_RANGE: 0x%02X\r\n", gyr_range);
-    uart_send_string(msg);  // deve stampare 0x04
+    uart_send_string(msg); 
 
+    // Set accelerometer internal filter bandwidth to 1000 Hz (register 0x10, value 15)
+    // Highest bandwidth = minimum filtering = fastest response to movement
     imu_set_bandwidth(15);  // 1000 Hz default
 }
 
@@ -160,32 +164,20 @@ uint8_t imu_read_chip_id(imu_device_t dev)
         return imu_read_register(dev, 0x00);
 }
 
-
 /*
-  Read raw X axis value from magnetometer (magentic field along X)
-  Data is 12-bit signed, stored in registers 0x42 (LSB) and 0x43 (MSB)
-  return Signed 13-bit value
+  imu_read_mag - Read raw magnetometer data (BMM150)
+  Read 6 bytes starting from register 0x42 (DATAX_LSB).
+  X and Y are 13-bit signed values: mask LSB with 0xF8, shift right by 3.
+  Z is 15-bit signed: mask LSB with 0xFE, shift right by 1.
+  All CS lines are put HIGH after the transaction.
  */
 
-
-/* int16_t imu_read_mag_x(void)
-{
-    uint8_t lsb = imu_read_register(IMU_MAG, 0x42);
-    uint8_t msb = imu_read_register(IMU_MAG, 0x43);
-    
-    lsb &= 0xF8;  // Mask lower 3 bits (not data)
-    int16_t raw = ((int16_t)msb << 8) | lsb; // Combine MSB and LSB
-    return raw >> 3;  // Shift right 3 to get 13 useful bits
-}
- */
-
-//////// test
 void imu_read_mag(sensor_data_t *data)
 {
     uint8_t buf[6];
     
     imu_select(IMU_MAG);
-    spi_write(0x42 | 0x80);  // indirizzo primo registro | read bit
+    spi_write(0x42 | 0x80);  // address | read bit (1)
     buf[0] = spi_write(0x00);  // X LSB
     buf[1] = spi_write(0x00);  // X MSB
     buf[2] = spi_write(0x00);  // Y LSB
@@ -201,12 +193,19 @@ void imu_read_mag(sensor_data_t *data)
     data->z = ((int16_t)buf[5] << 8 | (buf[4] & 0xFE)) >> 1;
 }
 
+/*
+  imu_read_acc - Read raw accelerometer data (BMA280)
+  Read 6 bytes starting from register 0x02.
+  Each axis is a 12-bit signed value: mask LSB with 0xF0, shift right by 4.
+  All CS lines are put HIGH after the transaction.
+ */
+
 void imu_read_acc(sensor_data_t *data)
 {
     uint8_t buf[6];
     
     imu_select(IMU_ACC);
-    spi_write(0x02 | 0x80);  // indirizzo primo registro | read bit
+    spi_write(0x02 | 0x80);  // address | read bit (1)
     buf[0] = spi_write(0x00);  // X LSB
     buf[1] = spi_write(0x00);  // X MSB
     buf[2] = spi_write(0x00);  // Y LSB
@@ -222,80 +221,14 @@ void imu_read_acc(sensor_data_t *data)
     data->z = ((int16_t)buf[5] << 8 | (buf[4] & 0xF0)) >> 4;
 }
 
-
-
-
-
-
-
 /*
-// read all data from magentometer
-void imu_read_mag(sensor_data_t *data)
-{
-    uint8_t lsb, msb;
+ * imu_read_gyro - Read raw gyroscope data (BMG160)
+ * Read 2 registers per axis (LSB then MSB) for X, Y, Z sequentially.
+ * Each axis is a 16-bit signed value, no masking needed (full resolution).
+ * With range set to ±125°/s: angular rate [°/s] = raw / 262.4
+ */
 
-    // X axis - 13 bit
-    lsb = imu_read_register(IMU_MAG, 0x42);
-    msb = imu_read_register(IMU_MAG, 0x43);
-    lsb &= 0xF8;  // Mask lower 3 bits
-    data->x = ((int16_t)msb << 8 | lsb) >> 3;
-
-    // Y axis - 13 bit
-    lsb = imu_read_register(IMU_MAG, 0x44);
-    msb = imu_read_register(IMU_MAG, 0x45);
-    lsb &= 0xF8;  // Mask lower 3 bits
-    data->y = ((int16_t)msb << 8 | lsb) >> 3;
-
-    // Z axis - 15 bit (maschera e shift diversi!)
-    lsb = imu_read_register(IMU_MAG, 0x46);
-    msb = imu_read_register(IMU_MAG, 0x47);
-    lsb &= 0xFE;  // Mask lower 1 bit
-    data->z = ((int16_t)msb << 8 | lsb) >> 1;
-}
-
-
-
-  Read all three accelerometer axes via SPI
-  Data is 12-bit signed (two's complement), stored in register pairs:
-  X: 0x02 (LSB), 0x03 (MSB)
-  Y: 0x04 (LSB), 0x05 (MSB)
-  Z: 0x06 (LSB), 0x07 (MSB)
-
-  LSB lower 4 bits are not data ? masked and shifted out
-  data -> Pointer to struct where results will be stored
-
-  To get filtered values you have to set 0x00 the 0x13 register (default mode)
- 
-
-void imu_read_acc(sensor_data_t *data)
-{
-    uint8_t lsb, msb;
-
-    // x axis
-    lsb = imu_read_register(IMU_ACC, 0x02);
-    msb = imu_read_register(IMU_ACC, 0x03);
-    lsb &= 0xF0;  // Mask lower 4 bits (not data)
-    data->x = ((int16_t)msb << 8 | lsb) >> 4; // Combine and shift to get 12-bit value
-    
-    // y axis
-    lsb = imu_read_register(IMU_ACC, 0x04);
-    msb = imu_read_register(IMU_ACC, 0x05);
-    lsb &= 0xF0;
-    data->y = ((int16_t)msb << 8 | lsb) >> 4;
-
-    // z axis
-    lsb = imu_read_register(IMU_ACC, 0x06);
-    msb = imu_read_register(IMU_ACC, 0x07);
-    lsb &= 0xF0;
-    data->z = ((int16_t)msb << 8 | lsb) >> 4;
-}
-*/
-
-
-
-// read gyroscope
-
-void imu_read_gyro(sensor_data_t *data)
+ /*void imu_read_gyro(sensor_data_t *data)
 {
     uint8_t lsb, msb;
 
@@ -313,23 +246,50 @@ void imu_read_gyro(sensor_data_t *data)
     lsb = imu_read_register(IMU_GYR, 0x06);
     msb = imu_read_register(IMU_GYR, 0x07);
     data->z = (int16_t)((msb << 8) | lsb);
+}*/
+
+void imu_read_gyro(sensor_data_t *data)
+{
+    uint8_t buf[6];
+
+    imu_select(IMU_GYR);
+    spi_write(0x02 | 0x80);  // address | read bit (1)
+    buf[0] = spi_write(0x00);  // X LSB
+    buf[1] = spi_write(0x00);  // X MSB
+    buf[2] = spi_write(0x00);  // Y LSB
+    buf[3] = spi_write(0x00);  // Y MSB
+    buf[4] = spi_write(0x00);  // Z LSB
+    buf[5] = spi_write(0x00);  // Z MSB
+    ACC_CS_LAT = 1;
+    GYR_CS_LAT = 1;
+    MAG_CS_LAT = 1;
+
+    // Gyro is full 16-bit, no masking needed
+    data->x = (int16_t)(buf[1] << 8 | buf[0]);
+    data->y = (int16_t)(buf[3] << 8 | buf[2]);
+    data->z = (int16_t)(buf[5] << 8 | buf[4]);
 }
 
-// yaw from gyro to compute the 90 deg rotation (OBSTACLE_AVOIDANCE)
+/*
+  imu_update_yaw - Integrate gyroscope Z axis to estimate yaw angle.
+  Called every IMU_DT = 2 ms (500 Hz task).
+  Converts raw values to °/s using range divisor 262.4 (±125°/s setting),
+  then accumulates: yaw += gyro_z [°/s] * dt [s].
+  Note: simple Euler integration — drift accumulates over time. Suitable for short maneuvers .
+ */
 
 void imu_update_yaw(void)
 {
     sensor_data_t gyro;
-    imu_read_gyro(&gyro);
+    imu_read_gyro(&gyro); // pointer to struct where gyro data will be stored
 
-    // Conversione LSB → °/s (range ±125°/s)
-    float gyro_z_dps = gyro.z / 262.4f;
+    float gyro_z_dps = gyro.z / 262.4f; // Convert raw Z to degrees per second (°/s) using range divisor for ±125°/s
 
-    // Integrazione semplice
+    // euler integration to update yaw angle: yaw += angular_rate * dt
     yaw_deg_gyro += gyro_z_dps * IMU_DT;
 }
 
-// getter and reset yaw gyro
+
 void imu_reset_yaw_gyro(void)
 {
     yaw_deg_gyro = 0.0f;
@@ -343,10 +303,10 @@ float imu_get_yaw_gyro(void)
 
 /*
   Set accelerometer low-pass filter bandwidth
-  Written to register 0x10 (ACC_BW) pag.58 datasheet, valid values 8?15:
+  Written to register 0x10
   8=7.81Hz, 9=15.63Hz, 10=31.25Hz, 11=62.5Hz,
   12=125Hz, 13=250Hz, 14=500Hz, 15=1000Hz
-  bandwidth_value -> Value between 8 and 15 chosen by the user via UART command
+  bandwidth_value -> Value between 8 and 15
  */
 
 void imu_set_bandwidth(uint8_t bandwidth_value)
@@ -356,27 +316,21 @@ void imu_set_bandwidth(uint8_t bandwidth_value)
 
 
 /*
-  Compute roll and pitch angles from accelerometer data
-  Uses atan2 for full 360 range, result in degrees
-  Uses pointers to avoid unnecessary memory copies
-   acc  ->  Pointer to raw accelerometer data
-   angles -> Pointer to struct where angles will be stored
+  imu_roll_pitch_yaw - Compute roll, pitch, and tilt-compensated yaw.
+ 
+  Roll and pitch are derived from the accelerometer only, using gravity
+  projection on the sensor axes:
+    roll  = atan2(ay, az)
+    pitch = atan2(-ax, sqrt(ay^2 + az^2))  [sqrt for stability near ±90°]
+ 
+  Yaw requires the magnetometer. Since the board may be tilted, raw mag_y/mag_x
+  would give a wrong heading — the magnetic field is rotated back to horizontal
+  using roll and pitch (tilt compensation) before calling atan2.
+ 
+  Output angles are in degrees. Yaw is relative to magnetic north.
+  Note: accelerometer-based roll/pitch is noisy under vibration/acceleration.
+  For dynamic use, consider a complementary or Kalman filter.
  */
-
-/* void imu_roll_pitch(constsensor_data_t *acc, angle_data_t *angles)
-{
-    float ax = (float)acc->x;
-    float ay = (float)acc->y;
-    float az = (float)acc->z;
-
-     // Roll: rotation around X axis
-    angles->roll  = atan2f(ay, az) * RAD_TO_DEG;
-    // Pitch: rotation around Y axis
-    // Uses sqrt of ay2+az2 as denominator for stability near90
-    angles->pitch = atan2f(-ax, sqrtf(ay*ay + az*az)) * RAD_TO_DEG;
-}
- */
-
 
 void imu_roll_pitch_yaw(const sensor_data_t *acc, const sensor_data_t *mag, angle_data_t *angles)
 {

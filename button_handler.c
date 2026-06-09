@@ -12,18 +12,18 @@ void buttons_init(void){
     RPINR0bits.INT1R = BTN_T3_RPIN;  // remapping
     IEC1bits.INT1IE = 0; 
     IFS1bits.INT1IF = 0;             // clear flag
-    IEC1bits.INT1IE = 1;             // abilita interrupt
-
+    IEC1bits.INT1IE = 1;             // set interrupt
+    
 	// INT2 button 2
     BTN_T2_TRIS = 1;                 // input
     RPINR1bits.INT2R = BTN_T2_RPIN;  // remapping
     IEC1bits.INT2IE = 0; 
     IFS1bits.INT2IF = 0;             // clear flag
-    IEC1bits.INT2IE = 1;             // abilita interrupt
+    IEC1bits.INT2IE = 1;             // set interrupt
 	
 }
 
-// --- ISR BUTTON ---
+// --- ISR BUTTON sets the value of the volatile variables ---
 void __attribute__((interrupt, no_auto_psv)) 
 _INT1Interrupt(void) {
     IFS1bits.INT1IF = 0;
@@ -35,9 +35,9 @@ _INT2Interrupt(void) {
     IFS1bits.INT2IF = 0;
     btn_t2_pressed = 1;
 }
-// --- ---
 
 
+// --- Functions to check if buttons were pressed, and reset the flags ---
 int button_t2_pressed(void) {
     if (btn_t2_pressed) {
         btn_t2_pressed = 0;

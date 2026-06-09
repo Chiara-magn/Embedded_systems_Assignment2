@@ -2,8 +2,7 @@
 #include "led_handler.h"
 
 
-//Initialize LD1 and LD2 as digital outputs, both off
-// for definitions of LD1_TRIS, LD1_LAT, LD2_TRIS, and LD2_LAT, see config.h
+// Initialize LD1 and LD2 as digital outputs, both off
 void led_init(void) {
 	
 	LD1_TRIS = 0;   // output led1

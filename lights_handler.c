@@ -1,9 +1,7 @@
 #include "config.h"
 #include "lights_handler.h"
 
-//Initialize Left, right and low intensity lights as digital outputs, both off
-// for definitions of R_LIGHTS_TRIS, R_LIGHTS_LAT, R_LIGHTS_TRIS, L_LIGHTS_LAT,
-// LOW_LIGHTS_TRIS and LOW_LIGHTS_LAT see config.h
+// Initialize Left, right and low intensity lights as digital outputs, both off
 void lights_init(void) {
 
     R_LIGHTS_TRIS = 0;     // output right lights

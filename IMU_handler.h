@@ -38,7 +38,6 @@ uint8_t imu_read_chip_id(imu_device_t dev);
 void imu_set_sleep(imu_device_t dev);
 void imu_set_active(imu_device_t dev);
 
-// functions Assignment1 
 void imu_read_acc(sensor_data_t *data);
 void imu_read_mag(sensor_data_t *data);
 void imu_read_gyro(sensor_data_t *data);

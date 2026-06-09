@@ -5,14 +5,17 @@
 
 void battery_init(void){
     // Battery
-    TRISBbits.TRISB11 = 1;
-    ANSELBbits.ANSB11 = 1;
+    BATTERY_TRIS = 1; // Set RB11 as input
+    BATTERY_ANSEL = 1; // Set RB11 as analog
 }
 
 double Battery_ReadVoltage(){
     
     // Convert ADC value to battery voltage (in volts)
-    double battery_voltage =raw_to_voltage(get_raw_battery()) * 3.0;
+    // The battery voltage is scaled by a factor of 3, so we need 
+    // to multiply the measured voltage to get the actual battery one.
+
+    double battery_voltage =raw_to_voltage(get_raw_battery()) * BATTERY_DIVIDER_RATIO;
 
     return battery_voltage;
 }

@@ -16,17 +16,17 @@
 
 // IMU Chip Select
 
-#define ACC_CS_LAT     LATBbits.LATB3   // Accelerometer CS → output latch  (RB3)
-#define ACC_CS_TRIS    TRISBbits.TRISB3 // Accelerometer CS → direction register
-#define ACC_CHIP_ID    0xFA             // Expected chip ID (datasheet: 0xFA, read: 0xFD)
+#define ACC_CS_LAT     LATBbits.LATB3   // Accelerometer Chip Select → output latch  (RB3)
+#define ACC_CS_TRIS    TRISBbits.TRISB3 // Accelerometer Chip Select → direction register
+#define ACC_CHIP_ID    0xFA             // Expected chip ID 
 
-#define GYR_CS_LAT     LATBbits.LATB4   // Gyroscope CS → output latch  (RB4)
-#define GYR_CS_TRIS    TRISBbits.TRISB4 // Gyroscope CS → direction register
-#define GYR_CHIP_ID    0x0F             // Expected chip ID (datasheet: 0x0F, read: 0x07)
+#define GYR_CS_LAT     LATBbits.LATB4   // Gyroscope Chip Select → output latch  (RB4)
+#define GYR_CS_TRIS    TRISBbits.TRISB4 // Gyroscope Chip Select → direction register
+#define GYR_CHIP_ID    0x0F             // Expected chip ID 
 
-#define MAG_CS_LAT     LATDbits.LATD6   // Magnetometer CS → output latch  (RD6)
-#define MAG_CS_TRIS    TRISDbits.TRISD6 // Magnetometer CS → direction register
-#define MAG_CHIP_ID    0x32             // Expected chip ID (datasheet: 0x32, read: 0xFF)
+#define MAG_CS_LAT     LATDbits.LATD6   // Magnetometer Chip Select → output latch  (RD6)
+#define MAG_CS_TRIS    TRISDbits.TRISD6 // Magnetometer Chip Select → direction register
+#define MAG_CHIP_ID    0x32             // Expected chip ID 
 
 
 // LED
@@ -72,24 +72,23 @@
 #define PWM_D_TRIS    TRISDbits.TRISD4 // PWM-D → RD4 → OC4
 #define OC4_RPIN      19
 
-// DA VERIFICARE
-// --- ADC channel assignments ---
-#define ADC_CH_BATTERY      11      // AN11  → BAT-VSENSE line (slide 26)
-#define ADC_CH_IR           2       // AN2   → IR Distance Sensor on MIKRObus socket 2 (slide 25)
-#define OBSTACLE_DETECTED_THRESHOLD 15 // da modificare 
+// ADC channel assignments ---
+#define ADC_CH_BATTERY      AD1CSSLbits.CSS11      // AN11  → BAT-VSENSE line (slide 26)
+#define ADC_CH_IR           AD1CSSLbits.CSS15      // AN15   → IR Distance Sensor 
 
-// --- Battery voltage divider ---
-// Three equal 100K resistors (R49, R51, R54): Vbat = 3 * Vadc  (slide 26)
-#define BATTERY_DIVIDER_RATIO   3.0f
+// BATTERY
+ 
+#define BATTERY_DIVIDER_RATIO   3.0f       // 3 resistors (R49, R51, R54): Vbat = 3 * Vadc 
+#define BATTERY_TRIS    TRISBbits.TRISB11  // RB11 as input
+#define BATTERY_ANSEL   ANSELBbits.ANSB11  // RB11 as analog input
 
-// IR 
+// IR infrared sensor
+#define OBSTACLE_DETECTED_THRESHOLD 15 // 15 cm
 #define IR_AN_TRIS   TRISBbits.TRISB15
 #define IR_AN_ANSEL  ANSELBbits.ANSB15
-#define IR_AN_RPIN   46   // RB15 -> RPI46 (dsPIC33EP512MU810)
 
 #define IR_EN_TRIS   TRISBbits.TRISB9
 #define IR_EN_LAT    LATBbits.LATB9
-#define IR_EN_RPIN   41   // RB9 -> RPI41 
 
 #endif
 
