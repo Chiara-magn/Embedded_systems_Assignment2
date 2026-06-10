@@ -46,7 +46,6 @@ void pwm_init(void) {
     OC1RS  = PWM_PERIOD;
     OC1R = 0;
 
-
     // configuration OC2
     OC2CON1bits.OCTSEL = 7;
     OC2CON1bits.OCM = 0b110;

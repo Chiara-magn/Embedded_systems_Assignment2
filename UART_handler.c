@@ -56,7 +56,7 @@ void uart_init(void){
     UART_TRIS_RX = 1;              // input D11 -> RX
     
     RPINR18bits.U1RXR = UART1_RX_RPIN;  // Map UART1 RX to RPI75 (RD11)
-    RPOR0bits.RP64R   = 1;              // Map UART1 TX to RP64  (RD0)
+    RPOR0bits.RP64R   = UART1_TX_RPIN;              // Map UART1 TX to RP64  (RD0)
     
     U1STA = 0x00;                       // reset control and status register
     U1MODE = 0x00;                      // reset mode register

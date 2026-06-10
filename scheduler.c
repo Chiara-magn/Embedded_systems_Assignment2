@@ -27,8 +27,7 @@ int scheduler_add(TaskFn f, int N, int offset, void* params){
     if(task_count >= MAX_TASKS)
         return -1;
 
-    tasks[task_count].n = offset;  // ← parte da offset invece che da 0
-    //tasks[task_count].n = 0;
+    tasks[task_count].n = offset; 
     tasks[task_count].N = N;
     tasks[task_count].enable = 1;
     tasks[task_count].f = f;

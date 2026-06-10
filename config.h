@@ -7,7 +7,7 @@
 
 // UART1 pin remapping
 #define UART1_RX_RPIN   75   // UART1 RX mapped to RPI75 (RD11, input)
-#define UART1_TX_RPIN   64   // UART1 TX mapped to RP64  (RD0,  output)
+#define UART1_TX_RPIN   1   // UART1 TX mapped to RP64  (RD0,  output)
 
 #define UART_TRIS_RX TRISDbits.TRISD11
 #define UART_TRIS_TX TRISDbits.TRISD0

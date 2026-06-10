@@ -35,15 +35,6 @@ void ADC_init(){
     AD1CON2bits.SMPI = 1;   // interrupt after scanning 2 channels (SMPI = N-1 = 1)
     AD1CON2bits.CSCNA = 1;  // enable input scan mode (use AD1CSSL to select channels)
 
-    
-    // Configure analog input pins GIA FATTO IN BATTERY_HANDLER.C E IR_HANDLER.C
-    // IR sensor on RB15 / AN15
-    //IR_AN_ANSEL = 1;  // set RB15 as analog
-    //IR_AN_TRIS = 1;  // set RB15 as input
-    // Battery monitor on RB11 / AN11
-    //BATTERY_ANSEL = 1;  // set RB11 as analog
-    //BATTERY_TRIS = 1;  // set RB11 as input
-
     AD1CSSL = 0;             // clear scan list before setting channels
 
     ADC_CH_IR = 1;  // include AN15 in scan list (IR sensor)

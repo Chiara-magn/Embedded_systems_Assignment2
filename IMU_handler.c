@@ -225,26 +225,6 @@ void imu_read_acc(sensor_data_t *data)
  * With range set to ±125°/s: angular rate [°/s] = raw / 262.4
  */
 
- /*void imu_read_gyro(sensor_data_t *data)
-{
-    uint8_t lsb, msb;
-
-    // X axis
-    lsb = imu_read_register(IMU_GYR, 0x02);
-    msb = imu_read_register(IMU_GYR, 0x03);
-    data->x = (int16_t)((msb << 8) | lsb);
-
-    // Y axis
-    lsb = imu_read_register(IMU_GYR, 0x04);
-    msb = imu_read_register(IMU_GYR, 0x05);
-    data->y = (int16_t)((msb << 8) | lsb);
-
-    // Z axis (yaw rate)
-    lsb = imu_read_register(IMU_GYR, 0x06);
-    msb = imu_read_register(IMU_GYR, 0x07);
-    data->z = (int16_t)((msb << 8) | lsb);
-}*/
-
 void imu_read_gyro(sensor_data_t *data)
 {
     uint8_t buf[6];
