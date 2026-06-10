@@ -26,20 +26,22 @@ int uart_get_tx_count(void);
 // useful to save some time for deadlines
 void uart_append_fixed(char *buf, int *position, float val);
 
-// Circular buffer to get user commands
-#define RX_BUFFER_SIZE 32 // emptied by command buffer max ~10 char/ciclo for 9600 baud
+//9600 baud/s -> 960 byte/s ->960 *0.002 = 1.92 Byte seny by UARTper control loop (2ms) at 500Hz
 
-#define UART_COMMAND_BUFFER_SZ 8 // max 3 characters 
+// Circular buffer to get user commands $PCREF,speed,yaw* (max 18 byte)
+#define RX_BUFFER_SIZE 32 // emptied by command buffer 
+
+#define UART_COMMAND_BUFFER_SZ 8 // max 4 characters (-100,+100)
 // contains only correctly formatted commands, emptied by command processor
 
 #define TX_BUFFER_SIZE   128  // contains data from imu to UART, emptied by TX ISR
-// worst case scenario task2 + task3 messages, total bytes in the buffer 60/63. with some margin 128
+// worst case scenario task2 + task3 messages, total bytes in the buffer 60/63. With some margin 128
+
 
 // Circular buffer struct — used for both RX and TX buffers.
 // head: index where next character will be written by ISR (RX) or main code (TX)
 // tail: index where next character will be read by main code (RX) or ISR (TX)
 // size: actual buffer size
-
 typedef struct {
     volatile char *buf;  //max sixe
     volatile int  head;     

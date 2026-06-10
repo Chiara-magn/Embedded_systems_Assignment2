@@ -52,7 +52,7 @@ void fsm_update_state(int obstacle_cm){
     switch(current_state) {
 
         case HALTED:
-            motor_stop();
+            //motor_stop();
             current_light_state = 0;
             if(button_t2_pressed()){current_state = MOVING;}
             break;
@@ -115,10 +115,8 @@ int obstacle_procedure(int obstacle_cm)
             count_obst = 1;  // reset done, dont do it again
         }
             imu_update_yaw();     // euler integation of gyro to get current yaw
-            motor_forward_clockwise(80, 0); // rotate clockwise with left motor at 80% duty, right motor stopped
-
+            
         if (fabs(imu_get_yaw_gyro()) >= 90.0f) { // if rotated 90° 
-            motor_stop();
             count_obst = 0; // reset counter for next state
             current_o_state = GO_FORWARD;
         }
@@ -128,8 +126,7 @@ int obstacle_procedure(int obstacle_cm)
     case GO_FORWARD:
         // move forward for 2 seconds (1000 * 2ms = 2000 ms)
         if (count_obst < 1000)
-        {
-            motor_forward(100); 
+        { 
             count_obst++;
         }
         else // after 2 seconds move to next state
@@ -146,10 +143,8 @@ int obstacle_procedure(int obstacle_cm)
             count_obst = 1; // reset done, dont do it again
         }
         imu_update_yaw(); // euler integation of gyro to get current yaw
-        motor_forward_clockwise(0, 80); // rotate counter-clockwise with right motor at 80% duty, left motor stopped
 
         if (fabs(imu_get_yaw_gyro()) >= 90.0f) { // if rotated 90°
-            motor_stop();
             // after completing the maneuver, check if obstacle still 
             // present for 3 times before halting
             count_obst = 0;
@@ -188,6 +183,10 @@ int obstacle_procedure(int obstacle_cm)
 // Getter functions for current state and light state
 State get_current_state(void) {
     return current_state;
+}
+
+Obstacle_state get_current_obstacle_state(void) {
+    return current_o_state;
 }
 
 int get_light_state(void) {

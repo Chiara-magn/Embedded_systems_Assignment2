@@ -35,7 +35,7 @@ unsigned int t2_elapsed = 0;
 unsigned int t3_elapsed = 0;
 
 
-// TASK 1 500 Hz: control loop -> FSM update, PWM, read IR
+// TASK 1 500 Hz: control loop -> FSM update, PWM motors, read IR
 void task1(void* param)
 {
      //   unsigned int t_start = TMR4; // deadline debug
@@ -63,6 +63,19 @@ void task1(void* param)
 
         case OBSTACLE_AVOIDANCE:
             // motors are handled in FSM.
+            switch(get_current_obstacle_state()) {
+                case ROTATE_CLOCK:
+                    motor_forward_clockwise(80, 0); // rotate clockwise with left motor at 80% duty, right motor stopped
+                    break;
+                case GO_FORWARD:
+                    motor_forward(100);
+                    break;
+                case ROTATE_COUNT_CLOCK:
+                    motor_forward_clockwise(0, 80); // rotate counter-clockwise with right motor at 80% duty, left motor stopped
+                    break;
+                default: motor_stop();
+                    break;
+            }
             break;
 
         case HALTED:

@@ -20,5 +20,6 @@ int obstacle_procedure(int obstacle_cm);
 void fsm_update_state( int obstacle_cm);
 int get_light_state(void);
 State get_current_state(void);
+Obstacle_state get_current_obstacle_state(void);
 
 #endif

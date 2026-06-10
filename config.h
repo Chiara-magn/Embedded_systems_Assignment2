@@ -99,7 +99,7 @@
 
 
 // IR infrared sensor
-#define OBSTACLE_DETECTED_THRESHOLD 15 // 15 cm
+#define OBSTACLE_DETECTED_THRESHOLD 20 //cm
 #define IR_AN_TRIS   TRISBbits.TRISB15
 #define IR_AN_ANSEL  ANSELBbits.ANSB15
 
