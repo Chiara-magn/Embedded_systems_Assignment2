@@ -34,7 +34,7 @@ void spi_init_pins(void)
     SPI1CON1bits.SMP = 0;     // sample in middle of clock period
     // if you set 1, sampling is at the end of the clock period.
     
-    SPI1CON1bits.CKP = 1;     // clock idle high
+    //SPI1CON1bits.CKP = 1;     // clock idle high
     
     // Fspi = Fcy / (PPRE * SPRE) IMU can support Fsck up to 10 MHz
     SPI1CON1bits.SPRE = 5; //3:1  secondary prescaler  

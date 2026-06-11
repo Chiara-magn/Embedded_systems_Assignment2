@@ -8,10 +8,10 @@ static float yaw_deg_gyro = 0.0f;
 
 // Initializes SPI settings for IMU communication
 void imu_setup(void) {
-    // Bosch BMX055 SPI protocol require idle LOW
+    // Bosch BMX055 SPI protocol require idle HIGH
     SPI1STATbits.SPIEN = 0;     // disable SPI to change settings
-    SPI1CON1bits.CKE = 1;       // Output data changes on transition from active to idle
-    SPI1CON1bits.CKP = 0;       // Idle state for clock is a low level
+    //SPI1CON1bits.CKE = 1;       // Output data changes on transition from active to idle
+    SPI1CON1bits.CKP = 1;       // Idle state for clock is a high level
     SPI1STATbits.SPIEN = 1;     // re-enable SPI
     tmr_wait_ms(TIMER2, 10);
 }

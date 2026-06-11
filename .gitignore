@@ -24,3 +24,13 @@ CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
 Makefile
+.generated_files/
+build/
+dist/
+nbproject/
+Makefile*
+Package-*
+private/
+!cmake/**/user.cmake
+cmake/**/.generated/*
+cmake/**/CMake*
