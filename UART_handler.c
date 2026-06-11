@@ -154,7 +154,7 @@ char uart_read_char(void) {
  using the TX circular buffer and enabling the TX interrupt*/  
 
 void uart_send_char(char c) {
-    int next = (tx_buf.head + 1) % tx_buf.size; // Calculate next write position
+    int next = (tx_buf.head + 1) % tx_buf.size; // Calculate next bb  position
     while (next == tx_buf.tail);   // Wait if TX buffer is full 
 
     tx_buf.buf[tx_buf.head] = c;    // Store character in TX buffer
