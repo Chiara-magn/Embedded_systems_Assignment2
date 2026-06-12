@@ -14,8 +14,6 @@ volatile uint16_t raw_bat = 0;
   Sampling is continuous and automatic. Every time Timer3 overflows (every 2 ms)
   conversion starts (SSRC=2). After both channels have been converted, the AD1 interrupt 
   fires (SMPI=1) and the results are read inside _AD1Interrupt().
- 
-  Call this function once at startup, after Timer3 has been configured.
  */
 
 void ADC_init(){
@@ -23,34 +21,26 @@ void ADC_init(){
     // ADC configuration ----------------------
     AD1CON1bits.ADON = 0;   // turn off ADC before configuring
 
-    AD1CON3bits.ADCS = 8;   // Tad = 8 Tcy (conversion clock period for 10-bit mode)
-    AD1CON1bits.FORM = 0;   // output format: unsigned integer
-    AD1CON1bits.ASAM = 1;   // automatic sampling start after conversion completes
-    AD1CON3bits.SAMC = 16;  // sample time: 16 Tad
-    AD1CON1bits.SSRC = 2;   // Timer3 overflow triggers end of sampling and starts conversion
-    //AD1CON1bits.SSRC = 7; // (alternative) automatic conversion trigger
     AD1CON1bits.AD12B = 0;  // select 10-bit mode (not 12-bit)
+    AD1CON1bits.FORM = 0;   // output format: unsigned integer
+    AD1CON3bits.ADCS = 8;   // Tad = 8 Tcy (conversion clock period for 10-bit mode)
+    AD1CON1bits.ASAM = 1;   // automatic sampling start after conversion completes
+    AD1CON1bits.SSRC = 2;   // Timer3 overflow triggers end of sampling and starts conversion
+    
 
-    AD1CON1bits.SIMSAM = 0; // sequential sampling (channels sampled one after another)
     AD1CON2bits.SMPI = 1;   // interrupt after scanning 2 channels (SMPI = N-1 = 1)
     AD1CON2bits.CSCNA = 1;  // enable input scan mode (use AD1CSSL to select channels)
 
     AD1CSSL = 0;             // clear scan list before setting channels
-
     ADC_CH_IR = 1;  // include AN15 in scan list (IR sensor)
     ADC_CH_BATTERY = 1;  // include AN11 in scan list (battery monitor)
 
-    // AD1CON2bits.ALTS = 0; // alternate input selection disabled (not used)
 
     IEC0bits.AD1IE = 0;  // disable ADC interrupt while setting up
     IFS0bits.AD1IF = 0;  // clear any pending interrupt flag
     IEC0bits.AD1IE = 1;  // enable ADC interrupt
 
     AD1CON1bits.ADON = 1;   // turn on ADC — sampling begins automatically
-    // Summary of timing:
-    //   ASAM=1 : sampling restarts automatically after each conversion
-    //   SSRC=2 : Timer3 overflow (every 2 ms) stops sampling and starts conversion
-    //   SMPI=1 : AD1IF fires after both AN15 and AN11 have been converted
 }
 
 
@@ -106,7 +96,7 @@ float raw_to_voltage(uint16_t raw){
   (approximately) 2.1 V, at 1 m is 0.4 V).
 
    voltage  Voltage read from the IR sensor [V].
-   return   Estimated distance [cm].
+   return   Estimated distance [m].
  */
    
 float voltage_to_dist(float voltage){
